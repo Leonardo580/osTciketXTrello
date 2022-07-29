@@ -1,4 +1,15 @@
 <?php
+
+if (isset($_GET['del'])){
+    $id = $_GET['del'];
+    $sql = "delete from repos where id = $id";
+    $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
+    if (!$link)
+        die( "Error: Unable to connect to MySQL." . PHP_EOL);
+    mysqli_query($link, $sql);
+    mysqli_close($link);
+    //http_redirect("addRepositories.php");
+}
 $queue_columns = array(
     'Title' => array(
         'width' => '8%',
@@ -19,10 +30,7 @@ $queue_columns = array(
         'heading' => __('Description'),
         'sort_col' => 'cdata__title',
     ),
-    'Members'=> array(
-            "width"=> "20%",
-        "heading"=> __('Members')
-    )
+
 );
 $refresh_url="";
 $results_type="";
@@ -101,12 +109,46 @@ $count=0;
                         $column['heading']);
                 }
                 ?>
+                <td>delete</td>
+                <td>Edit</td>
             </tr>
             </thead>
             <tbody>
 <!--            // display all repos from database-->
-                </tbody>
+
+<?php
+//$repos = Repositories::getAllRepositoreis();
+$link = mysqli_connect("localhost", "anas", "22173515", "osticket");
+if (!$link)
+    die( "Error: Unable to connect to MySQL." . PHP_EOL);
+$sql = "select * from repos";
+$result = mysqli_query($link, $sql);
+$repositories = array();
+while($row = mysqli_fetch_array($result)){
+    $repositories[] = $row;
+}
+mysqli_close($link);
+
+foreach ($repositories as $r){
+?>
+            <tr>
+                 <td><a href="DetailedRepo.php?idr=<?php echo $r['id']; ?>"><?php echo $r['title']; ?></a></td>
+                <td><?php echo $r['creator']; ?></td>
+                <td><?php echo $r['dateCreated']; ?></td>
+                <td><?php echo
+                    $st=$r['description'];
+                if (strlen($st) > 50) {
+                    $st = substr($st, 0, 100);
+                    $st .= "...";
+                }
+                echo $st
+                ?></td>
+                <td><a href="Repositories.php?del=<?php echo $r['id']; ?>"><button>Delete</button></a></td>
+                <td> <input type="button" onclick="editRepo(<?php echo $r['id'];?>)" value="Edit"> </td>
             </tr>
+<?php } ?>
+                </tbody>
+
             </tfoot>
         </table>
 
@@ -139,3 +181,8 @@ $count=0;
         $('[data-toggle=tooltip]').tooltip();
     });
 </script>-->
+<script>
+    function editRepo(id) {
+        window.location.href = "http://localhost/osTicket/upload/scp/"+'editRepositories.php?edit='+id;
+    }
+</script>

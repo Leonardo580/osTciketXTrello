@@ -62,7 +62,7 @@ class RepositoriesModel extends VerySimpleModel{
 
 
 }
-class Repositories extends RepositoriesModel{
+class Repositories extends RepositoriesModel implements Threadable {
     var $form;
     var $entry;
     var $_thread;
@@ -89,6 +89,171 @@ class Repositories extends RepositoriesModel{
             }
         }
         return $this->_answers;
+    }
+
+    static function getAllRepositoreis(){
+        $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
+        if (!$link)
+            die( "Error: Unable to connect to MySQL." . PHP_EOL);
+        $sql = "select * from repos";
+        $result = mysqli_query($link, $sql);
+        $repositories = array();
+        while($row = mysqli_fetch_array($result)){
+            $repositories[] = $row;
+        }
+        mysqli_close($link);
+        return $repositories;
+
+    }
+    function getDynamicFieldById($fid){
+        foreach (DynamicFormEntry::forObject($this->getId(),
+        ObjectModel::OBJECT_TYPE_TASK) as $form){
+            foreach ($form->getFields() as $field)
+                if ($field->getId() ==$fid)
+                    return $field;
+        }
+    }
+    function getDynamicFields($criteria=array()) {
+
+        $fields = DynamicFormField::objects()->filter(array(
+            'id__in' => $this->entries
+                ->filter($criteria)
+                ->values_flat('answers__field_id')));
+
+        return ($fields && count($fields)) ? $fields : array();
+    }
+    function getField($fid){
+        if (is_numeric($fid))
+            return $this->getDynamicFieldById($fid);
+        switch ($fid){
+            case "dateCreated":
+                return  DateTimeField::init(array(
+                    "id"=>$fid,
+                    "name"=>$fid,
+                    "default"=> Misc::db2gmtime($this->getDateCreated()),
+                    "label"=> __("Due Date"),
+                    "configuration"=> array(
+                        "min"=> Misc::gmtime(),
+                        "time"=> true,
+                        "gmt"=> false,
+                        "future"=> true,
+                    )
+                ));
+        }
+    }
+    function getThreadId(){
+        return $this->thread->getId();
+    }
+    function getThread(){
+        return $this->thread();
+    }
+    function getThreadEntry($id){
+        return $this->thread->getEntry($id);
+    }
+    function getThreadEntries($type=false){
+        $thread = $this->getThread()->getEntries();
+        if ($type && is_array($type))
+            $thread->filter(array('type__in'=>$type));
+        return $thread;
+
+    }
+    function postThreadEntry($type, $vars, $options=array()){
+        $errors = array();
+        $poster = isset($options['poster']) ? $options['poster'] : null;
+        $alert = isset($options['alert']) ? $options['alert'] : true;
+        switch ($type) {
+            case 'N':
+            case 'M':
+                return $this->getThread()->addDescription($vars);
+                break;
+            default:
+                return $this->postNote($vars, $errors, $poster, $alert);
+        }
+    }
+    function getForm(){
+        if (!isset($this->form)) {
+            // Look for the entry first
+            if ($this->form = DynamicFormEntry::lookup(
+                array('object_type' => ObjectModel::OBJECT_TYPE_REPOSITORIES))) {
+                return $this->form;
+            }
+            // Make sure the form is in the database
+            elseif (!($this->form = DynamicForm::lookup(
+                array('type' => ObjectModel::OBJECT_TYPE_REPOSITORIES)))) {
+                $this->__loadDefaultForm();
+                return $this->getForm();
+            }
+            // Create an entry to be saved later
+            $this->form = $this->form->instanciate();
+            $this->form->object_type = ObjectModel::OBJECT_TYPE_REPOSITORIES;
+        }
+
+        return $this->form;
+    }
+    function addDynamicData($data){
+        $rf= RepositoriesForm::getInstance($this->id, true);
+        foreach ($rf->getFields() as $f)
+            if (isset($data[$f->get('name')]))
+                $rf->setAnswer($f->get('name'), $data[$f->get('name')]);
+
+        $rf->save();
+
+        return $rf;
+    }
+
+    function getDynamicData($create=true) {
+        if (!isset($this->_entries)) {
+            $this->_entries = DynamicFormEntry::forObject($this->id,
+                ObjectModel::OBJECT_TYPE_REPOSITORIES)->all();
+            if (!$this->_entries && $create) {
+                $f = RepositoriesForm::getInstance($this->id, true);
+                $f->save();
+                $this->_entries[] = $f;
+            }
+        }
+
+        return $this->_entries ?: array();
+    }
+    function to_json(){
+        $info =array(
+            'id'=> $this->getId(),
+            "title"=> $this->getTitle(),
+        );
+        return JsonDataEncoder::encode($info);
+    }
+    function __cdata($field, $ftype=null){
+        foreach($this->getDynamicData() as $e){
+            if (!$e->form ||
+                ($ftype && $ftype != $e->form->get('type')))
+                continue;
+            if ($a=$e->getAnswer($field))
+                return $a;
+        }
+        return null;
+    }
+    function __toString() {
+        return (string) $this->getTitle();
+    }
+    function replaceVars($input , $vars=array()){
+        global $ost;
+        return $ost->replaceTemplateVariables($input,
+        array_merge($vars, array('task'=>$this)));
+
+    }
+    function getVar($tag){
+        global $cfg;
+        if ($tag && is_callable(array($this, 'get', ucfirst($tag))))
+            return call_user_func(array($this, 'get', ucfirst($tag)));
+        switch(mb_strtolower($tag)){
+            case "title":
+                return $this->getTitle();
+                case "description":
+                return Format::display($this->getDescription());
+            case "dateCreated":
+                return new FormattedDate($this->getDateCreated());
+
+        }
+        return false;
     }
     static function __loadDefaultForm(){
         require_once INCLUDE_DIR.'class.i18n.php';

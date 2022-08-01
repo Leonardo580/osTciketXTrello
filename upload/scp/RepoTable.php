@@ -45,7 +45,7 @@ $count=0;
         require STAFFINC_DIR.'templates/tasks-queue-sort.tmpl.php';
         ?>
     </div>
-    <form action="tasks.php" method="get" onsubmit="javascript:
+    <form action="" method="get" onsubmit="javascript:
         $.pjax({
         url:$(this).attr('action') + '?' + $(this).serialize(),
         container:'#pjax-container',
@@ -55,9 +55,7 @@ $count=0;
         <input type="hidden" name="a" value="search">
         <input type="hidden" name="search-type" value=""/>
         <div class="attached input">
-            <input type="text" class="basic-search" data-url="ajax.php/tasks/lookup" name="query"
-                   autofocus size="30" value="<?php echo Format::htmlchars($_REQUEST['query'], true); ?>"
-                   autocomplete="off" autocorrect="off" autocapitalize="off">
+            <input type="text" class="basic-search" id="search" name="search">
             <button type="submit" class="attached button"><i class="icon-search"></i>
             </button>
         </div>
@@ -127,6 +125,16 @@ $repositories = array();
 while($row = mysqli_fetch_array($result)){
     $repositories[] = $row;
 }
+if (isset($_GET['search'])){
+    $search = $_GET['search'];
+    $sql= "select * from repos where title like '%$search%'  or description like '%$search%'";
+    $result = mysqli_query($link, $sql);
+    $repositories = array();
+    while($row = mysqli_fetch_array($result)){
+        $repositories[] = $row;
+    }
+
+}
 mysqli_close($link);
 
 foreach ($repositories as $r){
@@ -135,13 +143,13 @@ foreach ($repositories as $r){
                  <td><a href="DetailedRepo.php?idr=<?php echo $r['id']; ?>"><?php echo $r['title']; ?></a></td>
                 <td><?php echo $r['creator']; ?></td>
                 <td><?php echo $r['dateCreated']; ?></td>
-                <td><?php echo
+                <td><?php
                     $st=$r['description'];
                 if (strlen($st) > 50) {
                     $st = substr($st, 0, 100);
                     $st .= "...";
                 }
-                echo $st
+                echo $st;
                 ?></td>
                 <td><a href="Repositories.php?del=<?php echo $r['id']; ?>"><button>Delete</button></a></td>
                 <td> <input type="button" onclick="editRepo(<?php echo $r['id'];?>)" value="Edit"> </td>

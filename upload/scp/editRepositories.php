@@ -32,9 +32,7 @@ require_once(STAFFINC_DIR.'header.inc.php');
         <br>
         <label for="description"><b>Description</b></label>
         <br>
-        <textarea id="description" style="width: 90% ; height: 70px" name="description">
-            <?php echo $repo['description'];?>
-        </textarea>
+        <textarea id="description" style="width: 90% ; height: 70px" name="description" ><?php echo $repo['description'];?></textarea>
         <br>
         <br>
         <input type="submit" value="update">

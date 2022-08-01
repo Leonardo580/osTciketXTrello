@@ -127,7 +127,6 @@ if ($org) {
         break;
     }
 }
-
 $nav->setTabActive('users');
 require(STAFFINC_DIR.'header.inc.php');
 require(STAFFINC_DIR.$page);

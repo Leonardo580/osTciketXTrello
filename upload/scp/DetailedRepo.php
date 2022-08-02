@@ -28,6 +28,10 @@ $ost->addExtraHeader('<meta name="tip-namespace" content="tasks.queue" />',
     "$('#content').data('tipNamespace', 'tasks.queue');");
 
 $inc = "RepoTable.php";
+$nav->setTabActive('Repositories');
+$open_name = _P('queue-name',
+    /* This is the name of the open tasks queue */
+    'Open');
 require_once(STAFFINC_DIR . 'header.inc.php');
 $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
 if (!$link)

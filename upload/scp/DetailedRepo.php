@@ -14,22 +14,12 @@ if (isset($_POST['email'])) {
         $message = "You have been invited to a repository. Please click the link below to accept the invitation.\n\n";
         $message .= "http://localhost/osTicket/upload/scp/acceptInvitation.php?email=" . $email;
         $headers = "From: " . "noreply@osticket.com" . "\r\n";
-        mail($email, $subject, $message, $headers);
-        mail("anasbenbrahim9@gmail.com", "eeee", "ddd", "From: noreply@test.tn");
+        //mail($email, $subject, $message, $headers);
+        //mail("anasbenbrahim9@gmail.com", "eeee", "ddd", "From: noreply@test.tn");
+        Mailer::sendmail($email, $subject, $message, $headers);
     }
 }
 
-if (isset($_POST['board_title'])) {
-    if (!empty($_POST['board_title'])) {
-        $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
-        $idr = $_GET['idr'];
-        $title = $_POST['board_title'];
-        $sql = "insert into boards (id_repo, title) values ($idr, $title)";
-        echo mysqli_query($link, $sql);
-        mysqli_close($link);
-        unset($_POST['board_title']);
-    }
-}
 
 //if (isset($_POST['']))
 $ost->addExtraHeader('<script type="text/javascript" src="js/ticket.js?e148727"></script>');
@@ -222,9 +212,10 @@ inner join repos on members.id_repo = repos.id";
                                 Title:
                             </td>
                             <td>
-                                <div style="position:relative"><input type="text" id="_159b9ba6d25cf8" size="40"
-                                                                      maxlength="64" placeholder=""
-                                                                      name="board_title" >
+                                <div id="boardinput" style="position:relative"><input type="text" id="_159b9ba6d25cf8"
+                                                                                      size="40"
+                                                                                      maxlength="64" placeholder=""
+                                                                                      name="board_title">
                                     <span class="error">*</span>
                                 </div>
                             </td>
@@ -299,52 +290,63 @@ $link = mysqli_connect("localhost", "root", "", "osticket");
 if (mysqli_connect_errno()) {
     echo "Failed to connect to MySQL: " . mysqli_connect_error();
 }
-$idr= $_GET['idr'];
-$sql="select * from boards where id_repo=$idr;";
-$result=mysqli_query($link,$sql);
-$boards=array();
-while ($row= mysqli_fetch_array($result)) {
-    $boards[]=$row;
+$idr = $_GET['idr'];
+$sql = "select * from boards where id_repo=$idr;";
+$result = mysqli_query($link, $sql);
+$boards = array();
+while ($row = mysqli_fetch_array($result)) {
+    $boards[] = $row;
 }
 
 ?>
 <br>
 <br>
-<br>
+<section class="">Boards</section>
+<hr>
+<br> <div class="album py-5 bg-light">
 <div class="container">
 
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
-        <?php foreach ($boards as $b) { ?>
-        <div class="col">
-            <div class="card shadow-sm">
-                <svg class="bd-placeholder-img card-img-top" width="100%" height="225"
-                     xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail"
-                     preserveAspectRatio="xMidYMid slice" focusable="false"><title> Placeholder</title>
-                    <rect width="100%" height="100%" fill="#55595c" data-darkreader-inline-fill=""
-                          style="--darkreader-inline-fill:#43484b;"></rect>
-                    <text x="50%" y="50%" fill="#eceeef" dy=".3em" data-darkreader-inline-fill=""
-                          style="--darkreader-inline-fill:#dddad6;">Board
-                    </text>
-                </svg>
 
-                <div class="card-body">
-                    <p class="card-text"><strong><?php echo $b['title']; ?></strong></p>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-sm btn-outline-secondary">View</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary">Edit</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary">Delete</button>
+    <?php foreach ($boards as $b) { ?>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+            <div class="col">
+
+                    <div class="card shadow-sm" id="<?php echo $b['id'] ?>">
+                        <svg class="bd-placeholder-img card-img-top" width="100%" height="225"
+                             xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail"
+                             preserveAspectRatio="xMidYMid slice" focusable="false"><title> Placeholder</title>
+                            <rect width="100%" height="100%" fill="#55595c" data-darkreader-inline-fill=""
+                                  style="--darkreader-inline-fill:#43484b;"></rect>
+                            <text x="50%" y="50%" fill="#eceeef" dy=".3em" data-darkreader-inline-fill=""
+                                  style="--darkreader-inline-fill:#dddad6;">Board
+                            </text>
+                        </svg>
+
+                        <div class="card-body">
+                            <p class="card-text"><strong><?php echo $b['title']; ?></strong></p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group">
+                                    <a href="Cards.php?idb=<?php echo $b['id'] ?>"><button type="button" class="btn btn-sm btn-outline-secondary">View</button></a>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" name="editBoard">Edit
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                                            onclick="deleteBoard(<?php echo $b['id']; ?>)">Delete
+                                    </button>
+                                </div>
+                                <small class="text-muted"><?php
+                                    $since = new DateTime($b['created']);
+                                    echo $since->diff(new DateTime())->format('%d days ago ');
+                                    echo $b['dateCreated'] ?></small>
+                            </div>
                         </div>
-                        <small class="text-muted"><?php
-                            $since = new DateTime($b['created']);
-                            echo $since->diff(new DateTime())->format('%d days ago ');
-                            echo $b['dateCreated']?></small>
                     </div>
-                </div>
+
             </div>
+
         </div>
-        <?php } ?>
+    <?php } ?>
     </div>
+
 </div>
 <?php
 require_once(STAFFINC_DIR . 'footer.inc.php');
@@ -372,8 +374,69 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
 
     $(document).ready(function () {
         $('#addnew').click(function () {
+            let idr =<?php echo $_GET['idr']; ?>;
             $("#popup").css("display", "block");
+            let form = $("#popup").children(".body").children("#the-lookup-form")
+                .children("#new-org-form").children("form");
+            form.on("submit", function () {
+                let title = $(this).children("table").children("tbody")
+                    .children("tr").children("td")
+                    .children("#boardinput")
+                    .children("#_159b9ba6d25cf8")
+                    .val();
+
+                $.ajax({
+                    url: "ajax.php/boards/add",
+                    type: "POST",
+                    data: {title: title, idr: idr},
+                    success: function (data) {
+                        $("#popup").css("display", "none");
+                        location.reload();
+                    },
+                    error: function (data) {
+                        console.log("add board error");
+                    },
+                });
+                return false;
+            });
+        })
+
+
+        $("button[name='editBoard']").click(function () {
+            let titleElement = $(this).parent().parent().parent().children("p").children();
+            let title = titleElement.text();
+            $("#popup").css("display", "block");
+            let form = $("#popup").children(".body").children("#the-lookup-form")
+                .children("#new-org-form").children("form");
+            t = form.children("table").children("tbody")
+                .children("tr").children("td")
+                .children("#boardinput")
+                .children("#_159b9ba6d25cf8");
+            t.attr("value", title);
+            id = $(this).parent().parent().parent().parent().attr("id");
+            form.on("submit", function (e) {
+                e.preventDefault();
+                $.ajax({
+                    url: "ajax.php/boards/edit/" + id,
+                    type: "POST",
+                    cache: false,
+                    data: {
+                        title: t.val()
+                    },
+                    success: function (data) {
+                        $("#popup").css("display", "none");
+                        console.log(data);
+                        titleElement.text(t.val());
+                    },
+                    error: function (data) {
+                        console.log("edit failed");
+                    }
+                })
+            });
+
+
         });
+
     });
 
     /*let content= document.getElementById("addBoard");
@@ -388,4 +451,29 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
         this.setAttribute("data-content", form);
     });
 */
+</script>
+<!-- JavaScript Bundle with Popper -->
+
+<script>
+    function deleteBoard(id) {
+
+        $(document).ready(function () {
+            $.ajax({
+                url: "ajax.php/boards/" + id + "/delete/",
+                type: "POST",
+                success: function (data) {
+                    $('#' + id).fadeOut("normal", function () {
+                        $(this).remove();
+                    })
+
+                },
+                error: function () {
+                    console.log("task failed successfully !!!");
+                }
+
+            });
+
+
+        });
+    }
 </script>

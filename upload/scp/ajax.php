@@ -237,6 +237,12 @@ $dispatcher = patterns('',
     url("^/repositories/" ,patterns("ajax.repositories.php:RepositoriesAjaxAPI",
         url("^add$", 'add')
     )),
+    //function of boards
+    url("^/boards/" ,patterns("ajax.boards.php:BoardsAjaxAPI",
+        url("^(?P<id>\d+)/delete", 'delete'),
+        url("^edit/(?P<id>\d+)", 'edit'),
+        url("^add$", 'add'),
+    )),
     url('^/thread/', patterns('ajax.thread.php:ThreadAjaxAPI',
         url_get('^(?P<tid>\d+)/collaborators/(?P<manage>\d+)/preview$', 'previewCollaborators'),
         url_get('^(?P<tid>\d+)/collaborators/(?P<manage>\d+)$', 'showCollaborators'),

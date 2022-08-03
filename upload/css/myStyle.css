@@ -6,11 +6,26 @@
 
 .card {
     display: grid;
+    border-radius: 10px;
+    border-style: solid;
+    border-color: gray;
     grid-template-rows: max-content 200px 1fr;
-}
+    padding: 10px;
 
+}
+i:hover {
+    cursor: pointer;
+}
+.card:hover {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
 .card img {
     object-fit: cover;
     width: 100%;
     height: 100%;
+}
+.add_card {
+    position: absolute;
+    height: 400px;
+    size: portrait;
 }

@@ -243,6 +243,13 @@ $dispatcher = patterns('',
         url("^edit/(?P<id>\d+)", 'edit'),
         url("^add$", 'add'),
     )),
+    // function of cards
+    url("^/cards/", patterns("ajax.cards.php:CardsAjaxAPI",
+        url("^add/(?P<idb>\d+)", "add"),
+        url("^delete/(?P<id>\d+)", "delete"),
+        url("^edit/(?P<id>\d+)", "edit")
+        )
+    ),
     url('^/thread/', patterns('ajax.thread.php:ThreadAjaxAPI',
         url_get('^(?P<tid>\d+)/collaborators/(?P<manage>\d+)/preview$', 'previewCollaborators'),
         url_get('^(?P<tid>\d+)/collaborators/(?P<manage>\d+)$', 'showCollaborators'),

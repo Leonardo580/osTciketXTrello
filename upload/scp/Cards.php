@@ -14,7 +14,7 @@ $open_name = _P('queue-name',
 require_once(STAFFINC_DIR.'header.inc.php');
 
 $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
-$sql="select id, id_board, title, description from cards";
+$sql="select id, id_board, title, description from cards where id_board=".$_GET['idb'];
 $result= mysqli_query($link, $sql);
 $cards=array();
 while ($row = mysqli_fetch_array($result)){
@@ -101,13 +101,13 @@ mysqli_close($link);
                                     </div><br>";
                             break;
                         case 1:
-                            $inprog.="<div class='activity'>
+                            $inprog.="<div class='activity' onclick='openActivity($ida)'>
 <label class='box'>".$a['content']."</label>
 <label style='float: right'>"."assigned to : ".$content."</label>
                                     </div><br>";
                             break;
                         case 2:
-                            $done.="<div class='activity'>
+                            $done.="<div class='activity' onclick='openActivity($ida)'>
 <label class='box'>".$a['content']."</label>
 <label style='float: right'>"."assigned to : ".$a['username']."</label>
                                     </div><br>";
@@ -357,6 +357,7 @@ mysqli_close($link);
         <span class="buttons pull-left">
             <input type="reset" value="Reset">
             <input type="button" name="cancel" class="close" value="Cancel">
+            <input type="button" class="warning" style="background-color : #f33535; color: white" value="Delete" id="delete-activity">
         </span>
                         <span class="buttons pull-right">
             <input type="submit" value="Edit Activity">
@@ -702,6 +703,24 @@ require_once(STAFFINC_DIR.'footer.inc.php');
         });
         $("#content").val(content);
         const form =popup.find("form");
+        $("#delete-activity").on("click", function (e) {
+           e.preventDefault();
+           fetch("ajax.php/activities/delete/"+id, {
+               method: "post"
+           }).then(res => {
+               if (res.ok){
+                   console.log("res is ok");
+               }
+               res.json()
+           })
+               .then (data => {
+                   console.log(data);
+                   popup.css("display", "none");
+                   location.reload();
+               }).catch(err => {
+                   console.log(err);
+               } )
+        })
         form.on("submit", function(e){
             e.preventDefault();
             let content =$("#cnt").val();

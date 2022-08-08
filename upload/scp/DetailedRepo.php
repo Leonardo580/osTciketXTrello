@@ -36,7 +36,7 @@ require_once(STAFFINC_DIR . 'header.inc.php');
 $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
 if (!$link)
     die("Error: Unable to connect to MySQL." . PHP_EOL);
-$sql = "select * from repos where id = " . $_GET['idr'];
+$sql = "select * from boards where id = " . $_GET['idr'];
 $result = mysqli_query($link, $sql);
 $repository = mysqli_fetch_array($result);
 mysqli_close($link);
@@ -309,14 +309,13 @@ while ($row = mysqli_fetch_array($result)) {
 <hr>
 <br> <div class="album py-5 bg-light">
 <div class="container">
-
-
+    <div class="row" >
     <?php foreach ($boards as $b) { ?>
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
-            <div class="col">
+
+            <div class="two-column" style="display: flex;">
 
                     <div class="card shadow-sm" id="<?php echo $b['id'] ?>">
-                        <svg class="bd-placeholder-img card-img-top" width="100%" height="225"
+                        <!--<svg class="bd-placeholder-img card-img-top" width="100%" height="225"
                              xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail"
                              preserveAspectRatio="xMidYMid slice" focusable="false"><title> Placeholder</title>
                             <rect width="100%" height="100%" fill="#55595c" data-darkreader-inline-fill=""
@@ -324,7 +323,8 @@ while ($row = mysqli_fetch_array($result)) {
                             <text x="50%" y="50%" fill="#eceeef" dy=".3em" data-darkreader-inline-fill=""
                                   style="--darkreader-inline-fill:#dddad6;">Board
                             </text>
-                        </svg>
+                        </svg>-->
+                        <img src="../assets/default/images/generic_image.jfif" alt="board image" class="img-board">
 
                         <div class="card-body">
                             <p class="card-text"><strong><?php echo $b['title']; ?></strong></p>
@@ -347,8 +347,9 @@ while ($row = mysqli_fetch_array($result)) {
 
             </div>
 
-        </div>
+
     <?php } ?>
+    </div>
     </div>
 
 </div>
@@ -395,7 +396,7 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
                     data: {title: title, idr: idr},
                     success: function (data) {
                         $("#popup").css("display", "none");
-                        location.reload();
+
                     },
                     error: function (data) {
                         console.log("add board error");

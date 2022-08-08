@@ -13,6 +13,7 @@ if (isset($_POST['title']) && isset($_POST['description'])) {
             die( "Error: Unable to connect to MySQL." . PHP_EOL);
         mysqli_query($link, $sql);
         mysqli_close($link);
+
         header("Location: Repositories.php");
     }
 

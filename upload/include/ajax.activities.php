@@ -22,7 +22,12 @@ class ActivitiesAjaxAPI extends AjaxController{
         $link=mysqli_connect("localhost", "anas", "22173515", "osticket");
         $content = $_POST['content'];
         $status = $_POST['status'];
-        $query= $link->prepare("update activities set content=?, status=? where id=?");
+        $id_user=$_POST['id_user'];
+        $query= $link->prepare("update activities set content=?, status=? , id_user=? where id=?");
+        $id_user=1;
+        $query->bind_param("siii", $content, $status, $id_user, $id);
+        $query->execute();
+        $query->close();
     }
     public function display($id): array{
         $link=mysqli_connect("localhost", "anas", "22173515", "osticket");

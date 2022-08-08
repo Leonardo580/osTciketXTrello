@@ -46,6 +46,8 @@ i:hover {
     border-style: solid;
     border-color : gray;
 }
-
+.activity:hover {
+    cursor: pointer;
+}
 
 

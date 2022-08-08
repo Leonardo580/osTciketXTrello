@@ -253,7 +253,8 @@ $dispatcher = patterns('',
     //function of activities
     url("^/activities/", patterns("ajax.activities.php:ActivitiesAjaxAPI",
         url("^add/(?P<idc>\d+)$", "add"),
-    url("^display/(?P<id>\d+)$", "display")
+    url("^display/(?P<id>\d+)$", "display"),
+    url("^edit/(?P<id>\d+)$", "edit")
     )),
     url('^/thread/', patterns('ajax.thread.php:ThreadAjaxAPI',
         url_get('^(?P<tid>\d+)/collaborators/(?P<manage>\d+)/preview$', 'previewCollaborators'),

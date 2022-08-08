@@ -75,7 +75,7 @@ mysqli_close($link);
             </div>
             <?php
                 $link=mysqli_connect("localhost", "anas", "22173515", "osticket");
-                $sql = "select id, id_card, content, status, id_user from activities a
+                $sql = "select id, id_card, content, status, id_user, o.username from activities a
     inner  join ost_staff o on o.staff_id =a.id_user where id_card=?";
                 $query = $link->prepare($sql);
                 $query->bind_param("i", $c['id']);
@@ -87,25 +87,35 @@ mysqli_close($link);
                 }
                 $query->close();
                 $idc=$c['id'];
-                $todo="<div class='' name='todo' id='todo-$idc'>";
-                $inprog="<div class='activity' name='inprog'style='display: none' id='inprog-$idc'>";
-                $done="<div class='activity' name='done' style='display: none' id='done-$idc'>";
+                $todo="<div class=''  name='todo-$idc'>";
+                $inprog="<div class=''  style='display: none' name='inprog-$idc'>";
+                $done="<div class=''  style='display: none' name='done-$idc'>";
                 foreach ($activities as $a) {
+                    $ida=$a['id'];
+                    $content=$a['content'];
                     switch ($a["status"]){
                         case 0:
-                            $todo.="<div class='activity'><label class='box'>".$a['content']."</label>
+                            $todo.="<div class='activity' onclick='openActivity($ida)'>
+<label class='box'>".$content."</label>
+<label style='float: right'>"."assigned to : ".$a['username']."</label>
                                     </div><br>";
                             break;
                         case 1:
-                            $inprog.="<label>".$a['content']."</label><br>";
+                            $inprog.="<div class='activity'>
+<label class='box'>".$a['content']."</label>
+<label style='float: right'>"."assigned to : ".$content."</label>
+                                    </div><br>";
                             break;
                         case 2:
-                            $done.="<label>".$a['content']."</label><br>";
+                            $done.="<div class='activity'>
+<label class='box'>".$a['content']."</label>
+<label style='float: right'>"."assigned to : ".$a['username']."</label>
+                                    </div><br>";
                     }
                 }
                 echo "<br>".$todo."</div>";
-                echo $inprog."</div>";
-                echo $done."</div>";
+                echo "<br>".$inprog."</div>";
+                echo "<br>".$done."</div>";
                 ?>
             <br>
             <button style="text-align: left; " onclick="addActivity(<?php echo $c['id'] ?>)"><i class="icon-plus icon-2x" style="float: left"></i>
@@ -170,7 +180,7 @@ mysqli_close($link);
                         </tr>
                         <tr>
                             <td class="multi-line required" style="min-width:120px;">
-                                context:
+                                content:
                             </td>
                             <td>
                                 <div id="boardinput" style="position:relative"><textarea name="context" id="context"
@@ -201,6 +211,155 @@ mysqli_close($link);
         </span>
                         <span class="buttons pull-right">
             <input type="submit" value="Add Activity">
+        </span>
+                    </p>
+                </form>
+            </div>
+            <div class="clear"></div>
+        </div>
+        <script type="text/javascript">
+            $(function () {
+                var last_req;
+                $('#org-search').typeahead({
+                    source: function (typeahead, query) {
+                        if (last_req) last_req.abort();
+                        last_req = $.ajax({
+                            url: "ajax.php/orgs/search?q=" + query,
+                            dataType: 'json',
+                            success: function (data) {
+                                typeahead.process(data);
+                            }
+                        });
+                    },
+                    onselect: function (obj) {
+                        $('#the-lookup-form').load(
+                            'ajax.php/orgs/select/' + encodeURIComponent(obj.id)
+                        );
+                    },
+                    property: "/bin/true"
+                });
+
+                $('a#unselect-org').click(function (e) {
+                    e.preventDefault();
+                    $('div#selected-org-info').hide();
+                    $('div#new-org-form').fadeIn({
+                        start: function () {
+                            $('#org-search').focus();
+                        }
+                    });
+                    return false;
+                });
+
+                $(document).on('click', 'form.org input.cancel', function (e) {
+                    e.preventDefault();
+                    $('div#new-org-form').hide();
+                    $('div#selected-org-info').fadeIn({
+                        start: function () {
+                            $('#org-search').focus();
+                        }
+                    });
+                    return false;
+                });
+            });
+        </script>
+    </div>
+</div>
+<div class="dialog draggable ui-draggable size-normal" id="popup-edit" style="top: 107.714px; left: 166px; display: none;">
+    <div id="popup-loading" style="display: none;">
+        <h1 style="margin-bottom: 20px; margin-top: 6px;"><i class="icon-spinner icon-spin icon-large"></i>
+            Loading ...</h1>
+    </div>
+    <div class="body">
+        <div id="the-lookup-form">
+            <h3 class="drag-handle">Edit Activity</h3>
+            <b><a class="close" href="#"><i class="icon-remove-circle"></i></a></b>
+            <hr>
+            <div><p id="msg_info"><i class="icon-info-sign"></i>&nbsp; Complete the form below to edit the activity.</p>
+            </div>
+            <div id="selected-org-info" style="display:none;margin:5px;">
+                <form method="post" class="org" action="">
+                    <input type="hidden" id="org-id" name="orgid" value="0">
+                    <i class="icon-group icon-4x pull-left icon-border"></i>
+                    <a class="action-button pull-right" style="overflow:inherit" id="unselect-org" href="#"><i
+                                class="icon-remove"></i>
+                        Edit Activity</a>
+                    <div><strong id="org-name"></strong></div>
+                    <div class="clear"></div>
+                    <hr>
+                    <p class="full-width">
+    <span class="buttons pull-left">
+        <input type="button" name="cancel" class="close" value="Cancel">
+    </span>
+                        <span class="buttons pull-right">
+        <input type="submit" value="Continue">
+    </span>
+                    </p>
+                </form>
+            </div>
+            <div id="new-org-form" style="display:block;">
+                <form method="post" class="" action="" id="add-activity">
+                    <?php
+                    csrf_token();
+                    ?>
+                    <table width="100%" class="fixed">
+                        <tbody>
+                        <tr>
+                            <td style="width:150px;"></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <th colspan="2">
+                                <em>
+                                    <strong>Edit Activity</strong>:
+                                    <div>Details on user activity</div>
+                                </em>
+                            </th>
+                        </tr>
+                        <tr>
+                            <td class="multi-line required" style="min-width:120px;">
+                                content:
+                            </td>
+                            <td>
+                                <div id="boardinput" style="position:relative"><textarea name="context" id="cnt"
+                                                                                         style="width:100%;height:100px;"></textarea>
+                                    <span class="error">*</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="multi-line ">Assigned to </td>
+                            <td>
+                                <select>
+                                    <option value="-1">Default</option>
+                                    <option>user 1</option>
+                                    <option>user 2</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="">
+                                Status:
+                            </td>
+                            <td>
+                                <select id="sl-status">
+                                    <option value="0">To Do</option>
+                                    <option value="1">In Progress</option>
+                                    <option value="2">Done</option>
+                                </select>
+                            </td>
+                        </tr>
+
+
+                        </tbody>
+                    </table>
+                    <hr>
+                    <p class="full-width">
+        <span class="buttons pull-left">
+            <input type="reset" value="Reset">
+            <input type="button" name="cancel" class="close" value="Cancel">
+        </span>
+                        <span class="buttons pull-right">
+            <input type="submit" value="Edit Activity">
         </span>
                     </p>
                 </form>
@@ -496,8 +655,9 @@ require_once(STAFFINC_DIR.'footer.inc.php');
                     id_user: id_user
                 },
                 success: function (data){
-                    console.log('success' + data);
+
                     $("#popup").css("display", "none");
+                    location.reload();
                 },
                 error: function (data){
                     console.log("could not add an activity");
@@ -510,9 +670,10 @@ require_once(STAFFINC_DIR.'footer.inc.php');
     function showActivities(id) {
 
         const st=$("#as-"+id).val();
-        let todo=$("#todo-"+id);
-        let inprog=$("#inprog-"+id);
-        let done=$("#done-"+id);
+        let todo=$("div[name='todo-"+id+"']");
+
+        let inprog=$("div[name='inprog-"+id+"']");
+        let done=$("div[name='done-"+id+"']");
         todo.css("display", "none");
         inprog.css("display", "none");
         done.css("display", "none");
@@ -530,5 +691,41 @@ require_once(STAFFINC_DIR.'footer.inc.php');
                 console.log("error "+st);
 
         }
+    }
+    function openActivity(id) {
+        const popup=$("#popup-edit");
+        popup.css("display", "block").css("top", "120px");
+        const status= ['todo', 'inprog', 'done']
+        let content="";
+        status.forEach(element => {
+
+        });
+        $("#content").val(content);
+        const form =popup.find("form");
+        form.on("submit", function(e){
+            e.preventDefault();
+            let content =$("#cnt").val();
+            let status = $("#sl-status").val();
+            console.log(content);
+            $.ajax({
+                    url: "ajax.php/activities/edit/" + id,
+                    type: 'POST',
+                data: {
+                        content: content,
+                    status: status,
+                    id_user: id_user
+                },
+                success: function (data) {
+                    console.log("success");
+                    popup.css("display", "none");
+                    location.reload();
+                },
+                error: function (data){
+                        console.log("could not edit on activity");
+                }
+                }
+
+            );
+        });
     }
 </script>

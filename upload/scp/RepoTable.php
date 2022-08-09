@@ -119,7 +119,8 @@ $count=0;
 $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
 if (!$link)
     die( "Error: Unable to connect to MySQL." . PHP_EOL);
-$sql = "select * from repos";
+$sql = "select id, title, description, username,creator, dateCreated from repos 
+    inner join ost_staff on staff_id=creator";
 $result = mysqli_query($link, $sql);
 $repositories = array();
 while($row = mysqli_fetch_array($result)){
@@ -140,8 +141,15 @@ mysqli_close($link);
 foreach ($repositories as $r){
 ?>
             <tr>
-                 <td><a href="DetailedRepo.php?idr=<?php echo $r['id']; ?>"><?php echo $r['title']; ?></a></td>
-                <td><?php echo $r['creator']; ?></td>
+                <?php
+                $redirect="";
+                if ($thisstaff->getId()==$r["creator"])
+                    $redirect="<a href='DetailedRepo.php?idr=".$r['id']."'>".$r['title']."</a>";
+                else
+                    $redirect=$r['title'];
+                ?>
+                 <td><?php echo $redirect ?></td>
+                <td><?php echo $r['username']; ?></td>
                 <td><?php echo $r['dateCreated']; ?></td>
                 <td><?php
                     $st=$r['description'];

@@ -12,11 +12,30 @@ if (isset($_POST['email'])) {
         $email = $_POST['email'];
         $subject = "you have been invited to a repository";
         $message = "You have been invited to a repository. Please click the link below to accept the invitation.\n\n";
-        $message .= "http://localhost/osTicket/upload/scp/acceptInvitation.php?email=" . $email;
+        $token = sha1(uniqid($email, true));
+        $message .= "http://localhost/osTicket/upload/scp/acceptInvitation.php?token=" . $token."&idr=".$_GET['idr'];
         $headers = "From: " . "noreply@osticket.com" . "\r\n";
         //mail($email, $subject, $message, $headers);
         //mail("anasbenbrahim9@gmail.com", "eeee", "ddd", "From: noreply@test.tn");
-        Mailer::sendmail($email, $subject, $message, $headers);
+        //mail($email, $subject, $message, $headers);
+        $link= mysqli_connect("localhost", "anas", "22173515", "osticket");
+        $query =$link->prepare("SELECT staff_id from ost_staff where email=?");
+        $email="anasbenbrahim9@gmail.com";
+        $query->bind_param("s", $email);
+        $id=$query->get_result();
+
+        if (!$id){
+            echo "<script>alert('this email doesn\'t exist !!')</script>";
+        }
+        else {
+            $id=$id->fetch_array()['id_staff'];
+            $query=$link->prepare("insert into pending_members values (?, ?, ?)");
+            $query->bind_param("sii", $token, $id, $_GET['idr']);
+
+        }
+        mysqli_close($link);
+
+
     }
 }
 
@@ -54,13 +73,14 @@ mysqli_close($link);
         <?php echo $repository['description']; ?>
     </p>
 </div>
-<form method="post" action="">
+<form method="post" action="" class="form">
     <?php
     csrf_token();
     ?>
-    <label>Invite members via email</label>
-    <input id="id_staff" type="hidden" name="id_staff" value="<?php echo $thisstaff->getId(); ?>">
-    <input id="email" name="email" type="email" placeholder="email">
+    <label >Invite members via email: </label>
+    <br>
+    <input id="id_staff" type="hidden" name="id_staff"  value="<?php echo $thisstaff->getId(); ?>">
+    <input id="email" name="email" type="email" placeholder="email" style="width: 200px;" >
     <input type="submit" value="Invite">
 </form>
 <br>
@@ -85,8 +105,8 @@ mysqli_close($link);
                         <?php
 
                         //$members = Members::getMembers($_GET['idr']);
-                        $sql = "select u.id, u.default_email_id, u.status, u.name, u.created, u.updated from ost_user u 
-inner join members on u.id = members.id_user
+                        $sql = "select u.staff_id as 'id', u.username as 'username' , u.created, u.updated from ost_staff u 
+inner join members on u.staff_id = members.id_user
 inner join repos on members.id_repo = repos.id";
                         $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
                         $result = mysqli_query($link, $sql);
@@ -396,6 +416,7 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
                     data: {title: title, idr: idr},
                     success: function (data) {
                         $("#popup").css("display", "none");
+                        location.reload();
 
                     },
                     error: function (data) {

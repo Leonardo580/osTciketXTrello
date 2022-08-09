@@ -557,6 +557,8 @@ require_once(STAFFINC_DIR.'footer.inc.php');
                                 '<div class="content">' +
                                 '<p>' + description + '</p>' +
                                 '</div>' +
+                                '<br>'+
+                                '<button style="text-align: left; " onclick="addActivity('+id+')"><i class="icon-plus icon-2x" style="float: left"></i>' +
                                 '</article>'
                             ).append($("#newCard"));
 
@@ -696,12 +698,8 @@ require_once(STAFFINC_DIR.'footer.inc.php');
     function openActivity(id) {
         const popup=$("#popup-edit");
         popup.css("display", "block").css("top", "120px");
-        const status= ['todo', 'inprog', 'done']
-        let content="";
-        status.forEach(element => {
+        $("#cnt").val(content);
 
-        });
-        $("#content").val(content);
         const form =popup.find("form");
         $("#delete-activity").on("click", function (e) {
            e.preventDefault();
@@ -725,7 +723,6 @@ require_once(STAFFINC_DIR.'footer.inc.php');
             e.preventDefault();
             let content =$("#cnt").val();
             let status = $("#sl-status").val();
-            console.log(content);
             $.ajax({
                     url: "ajax.php/activities/edit/" + id,
                     type: 'POST',

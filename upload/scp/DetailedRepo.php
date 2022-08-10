@@ -6,7 +6,8 @@ require_once(INCLUDE_DIR . 'class.export.php');
 include "class.member.php";
 //include "../include/class.email.php";
 
-if (isset($_POST['email'])) {
+header("Access-Control-Allow-Origin: *");
+/*if (isset($_POST['email'])) {
     if (!empty($_POST['email'])) {
         // send email to user
         $email = $_POST['email'];
@@ -20,9 +21,9 @@ if (isset($_POST['email'])) {
         //mail($email, $subject, $message, $headers);
         $link= mysqli_connect("localhost", "anas", "22173515", "osticket");
         $query =$link->prepare("SELECT staff_id from ost_staff where email=?");
-        $email="anasbenbrahim9@gmail.com";
         $query->bind_param("s", $email);
         $id=$query->get_result();
+
 
         if (!$id){
             echo "<script>alert('this email doesn\'t exist !!')</script>";
@@ -37,7 +38,7 @@ if (isset($_POST['email'])) {
 
 
     }
-}
+}*/
 
 
 //if (isset($_POST['']))
@@ -73,7 +74,7 @@ mysqli_close($link);
         <?php echo $repository['description']; ?>
     </p>
 </div>
-<form method="post" action="" class="form">
+<form method="post" action="" id="invite-members" class="form">
     <?php
     csrf_token();
     ?>
@@ -123,13 +124,13 @@ inner join repos on members.id_repo = repos.id";
 
                                 <td class="title">
                                     <div class="thumb">
-                                        <img class="img-fluid" src="https://bootdey.com/img/Content/avatar/avatar7.png"
+                                        <img class="img-fluid" src="../assets/default/images/generic-person-icon-1.png"
                                              alt="">
                                     </div>
                                     <div class="candidate-list-details">
                                         <div class="candidate-list-info">
                                             <div class="candidate-list-title">
-                                                <h5 class="mb-0"><a href="#"><?php echo $m['name'] ?></a></h5>
+                                                <h5 class="mb-0"><a href="#"><?php echo $m['username'] ?></a></h5>
                                             </div>
                                             <div class="candidate-list-option">
                                                 <ul class="list-unstyled">
@@ -153,6 +154,10 @@ inner join repos on members.id_repo = repos.id";
                                                data-original-title="view"><i
                                                         class="far fa-eye"></i></a></li>
                                         <li>
+                                            <?php
+                                            $repositories = Repositories::getAllRepositories();
+                                            echo json_encode($repositories);
+                                            ?>
                                             <a href="deleteMember.php?id=<?php echo $m['id']; ?>&idr=<?php echo $_GET['idr']; ?>"
                                                class="text-danger" data-toggle="tooltip" title=""
                                                data-original-title="Delete"><i
@@ -502,4 +507,28 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
 
         });
     }
+    const idr= <?php echo $_GET['idr']; ?>;
+
+    $(document).ready(()=> {
+        //const id_user= $("#id_staff").val();
+        $("#invite-members").on("submit", (e)=> {
+            e.preventDefault();
+            const form = $(this);
+            const email =$("#email").val().trim();
+            $.ajax({
+                url: "ajax.php/members/invite",
+                type: "post",
+                data: {
+                    email: email,
+                    idr: idr,
+
+                },
+                success: data => {
+                    console.log(data);
+                    form.find("input[type='submit']").append("Done 👌");
+                },
+                error: data => console.log(data)
+            })
+        });
+    });
 </script>

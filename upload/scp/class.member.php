@@ -1,5 +1,5 @@
 <?php
-class Members{
+class Members  {
    static function getMembers($id){
         $sql= "select u.id, u.default_email_id, u.status, u.name, u.created, u.updated from ost_user u 
 inner join members on u.id = members.id_user
@@ -15,4 +15,6 @@ inner join repos on members.id_repo = repos.id";
 
         return $members;
     }
+
+
 }

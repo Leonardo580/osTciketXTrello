@@ -70,6 +70,7 @@ class Repositories extends RepositoriesModel implements Threadable {
     var $_answers;
     var $lastrespondent;
 
+
     function __onload()
     {
        $this->loadDynamicData();
@@ -91,11 +92,11 @@ class Repositories extends RepositoriesModel implements Threadable {
         return $this->_answers;
     }
 
-    static function getAllRepositoreis(){
+    static function getAllRepositories(){
         $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
         if (!$link)
-            die( "Error: Unable to connect to MySQL." . PHP_EOL);
-        $sql = "select * from repos";
+            die("Error: Unable to connect to MySQL." . PHP_EOL);
+        $sql = "select id, title, description, creator, dateCreated from repos";
         $result = mysqli_query($link, $sql);
         $repositories = array();
         while($row = mysqli_fetch_array($result)){

@@ -10,14 +10,31 @@ require_once(STAFFINC_DIR . 'header.inc.php');
 $link=mysqli_connect("localhost", "anas", "22173515", "osticket");
 $idr=$_GET['idr'];
 $token= $_GET['token'];
-$query=$link->prepare("select token, tmstmp, id_repo, id_user from pending_members where token=?");
-$query->bind_param("s", $token);
-$res=$query->get_result();
+$query="select token, tmstmp as 'tmstmp', id_repo, id_user from pending_members where token='".$token."'";
+$res=mysqli_query($link, $query);
+
+
 if (!$res){
     echo "<h1>Unknown error</h1>";
 }else {
-    $pm=$res->fetch_array();
+    $pm=mysqli_fetch_array($res);
 
+    $timestamp=date($pm['tmstmp']);
+    $current_time=date(time());
+
+
+    if ( $_SERVER["REQUEST_TIME"] - $pm['tmstmp'] < 86400){
+        $idr =$pm['id_repo'];
+        $q=$link->prepare("insert into members (id_repo, id_user) VALUES (? , ?)");
+        $q->bind_param("ii", $idr, $pm['id_user']);
+        $q->execute();
+        $q->close();
+        echo "<h1>the invite has been accepted</h1>";
+        echo "<a href='DetailedRepo.php?idr=$idr' >Click here<a> to proceed to the repository  </h2>";
+
+
+
+    }
 }
 
 ?>

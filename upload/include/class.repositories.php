@@ -98,6 +98,8 @@ class Repositories extends RepositoriesModel implements Threadable {
             die("Error: Unable to connect to MySQL." . PHP_EOL);
         $sql = "select id, title, description, creator, dateCreated from repos";
         $result = mysqli_query($link, $sql);
+        if (!$result)
+            return mysqli_errno($link);
         $repositories = array();
         while($row = mysqli_fetch_array($result)){
             $repositories[] = $row;

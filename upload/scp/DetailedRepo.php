@@ -61,6 +61,18 @@ $result = mysqli_query($link, $sql);
 $repository = mysqli_fetch_array($result);
 mysqli_close($link);
 ?>
+
+<?php
+$link = mysqli_connect("localhost", "anas", "22173515", "osticket");
+$query = $link->prepare("select id, title, description, creator, dateCreated from repos where id= ?");
+$query->bind_param("i", $_GET['idr']);
+$query->execute();
+$res = $query->get_result();
+$res = $res->fetch_array(PDO::FETCH_LAZY);
+$isTheOwner = $thisstaff->getId() == $res['creator'];
+$query->close();
+?>
+
 <!--<a href="AddBoard.php?idr=--><?php //echo $_GET['idr']?><!--"> <button style="float: right"><i class="icon-plus"></i></button></a>-->
 
 <!--<button type="button" class="btn btn-secondary" id="addBoard" style="float: left;" data-container="body"
@@ -78,10 +90,10 @@ mysqli_close($link);
     <?php
     csrf_token();
     ?>
-    <label >Invite members via email: </label>
+    <label>Invite members via email: </label>
     <br>
-    <input id="id_staff" type="hidden" name="id_staff"  value="<?php echo $thisstaff->getId(); ?>">
-    <input id="email" name="email" type="email" placeholder="email" style="width: 200px;" >
+    <input id="id_staff" type="hidden" name="id_staff" value="<?php echo $thisstaff->getId(); ?>">
+    <input id="email" name="email" type="email" placeholder="email" style="width: 200px;">
     <input type="submit" value="Invite">
 </form>
 <br>
@@ -155,13 +167,16 @@ inner join repos on members.id_repo = repos.id";
                                                         class="far fa-eye"></i></a></li>
                                         <li>
                                             <?php
-                                            $repositories = Repositories::getAllRepositories();
-                                            echo json_encode($repositories);
-                                            ?>
-                                            <a href="deleteMember.php?id=<?php echo $m['id']; ?>&idr=<?php echo $_GET['idr']; ?>"
+                                            $id = $m['id'];
+                                            $idr = $_GET['idr'];
+                                            if ($isTheOwner && $id!=$thisstaff->getId()) {
+                                                echo '
+                                            <a href="deleteMember.php?id='.$id.'&idr='.$idr.'"
                                                class="text-danger" data-toggle="tooltip" title=""
                                                data-original-title="Delete"><i
-                                                        class="far fa-trash-alt"></i></a></li>
+                                                        class="far fa-trash-alt"></i></a></li>';
+                                            }
+                                            ?>
                                     </ul>
                                 </td>
                             </tr>
@@ -332,12 +347,13 @@ while ($row = mysqli_fetch_array($result)) {
 <br>
 <section class="">Boards</section>
 <hr>
-<br> <div class="album py-5 bg-light">
-<div class="container">
-    <div class="row" >
-    <?php foreach ($boards as $b) { ?>
+<br>
+<div class="album py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <?php foreach ($boards as $b) { ?>
 
-            <div class="two-column" style="display: flex;">
+                <div class="two-column" style="display: flex;">
 
                     <div class="card shadow-sm" id="<?php echo $b['id'] ?>">
                         <!--<svg class="bd-placeholder-img card-img-top" width="100%" height="225"
@@ -355,7 +371,9 @@ while ($row = mysqli_fetch_array($result)) {
                             <p class="card-text"><strong><?php echo $b['title']; ?></strong></p>
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="btn-group">
-                                    <a href="Cards.php?idb=<?php echo $b['id'] ?>"><button type="button" class="btn btn-sm btn-outline-secondary">View</button></a>
+                                    <a href="Cards.php?idb=<?php echo $b['id'] ?>">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary">View</button>
+                                    </a>
                                     <button type="button" class="btn btn-sm btn-outline-secondary" name="editBoard">Edit
                                     </button>
                                     <button type="button" class="btn btn-sm btn-outline-secondary"
@@ -370,11 +388,11 @@ while ($row = mysqli_fetch_array($result)) {
                         </div>
                     </div>
 
-            </div>
+                </div>
 
 
-    <?php } ?>
-    </div>
+            <?php } ?>
+        </div>
     </div>
 
 </div>
@@ -507,14 +525,15 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
 
         });
     }
-    const idr= <?php echo $_GET['idr']; ?>;
 
-    $(document).ready(()=> {
+    const idr = <?php echo $_GET['idr']; ?>;
+
+    $(document).ready(() => {
         //const id_user= $("#id_staff").val();
-        $("#invite-members").on("submit", (e)=> {
+        $("#invite-members").on("submit", (e) => {
             e.preventDefault();
             const form = $(this);
-            const email =$("#email").val().trim();
+            const email = $("#email").val().trim();
             $.ajax({
                 url: "ajax.php/members/invite",
                 type: "post",

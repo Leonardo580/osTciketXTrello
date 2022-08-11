@@ -11,14 +11,14 @@ $open_name = _P('queue-name',
     'Open');
 
 
-require_once(STAFFINC_DIR.'header.inc.php');
+require_once(STAFFINC_DIR . 'header.inc.php');
 
 $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
-$sql="select id, id_board, title, description from cards where id_board=".$_GET['idb'];
-$result= mysqli_query($link, $sql);
-$cards=array();
-while ($row = mysqli_fetch_array($result)){
-    $cards[]=$row;
+$sql = "select id, id_board, title, description from cards where id_board=" . $_GET['idb'];
+$result = mysqli_query($link, $sql);
+$cards = array();
+while ($row = mysqli_fetch_array($result)) {
+    $cards[] = $row;
 }
 mysqli_close($link);
 
@@ -50,23 +50,25 @@ mysqli_close($link);
 
 
 <br>
-    <div class="cards">
-        <?php foreach($cards as $c){
+<div class="cards">
+    <?php foreach ($cards as $c) {
 
-            ?>
+        ?>
         <article class="card" id="<?php echo $c['id']; ?>">
             <header>
-                <span  style="float: right; padding-left: 5px" onclick="deleteCard(<?php echo $c['id'];?>)"> <i class="icon-trash" ></i></span>
-                <span style="float: right;" onclick="editCard(<?php echo $c['id'];?>)" ><i class="icon-edit" ></i></span>
+                <span style="float: right; padding-left: 5px" onclick="deleteCard(<?php echo $c['id']; ?>)"> <i
+                            class="icon-trash"></i></span>
+                <span style="float: right;" onclick="editCard(<?php echo $c['id']; ?>)"><i class="icon-edit"></i></span>
                 <h2><?php echo $c['title']; ?></h2>
             </header>
             <img src="../assets/default/images/generic_image.jfif" alt="Hot air balloons">
             <div class="content">
                 <p><?php
-                    echo $st=$c["description"];
+                    echo $st = $c["description"];
                     ?></p>
                 <label><b>Status: </b></label>
-                <select name="activity-status" id="as-<?php echo $c['id']; ?>" onclick="showActivities(<?php echo $c['id']; ?>)">
+                <select name="activity-status" id="as-<?php echo $c['id']; ?>"
+                        onclick="showActivities(<?php echo $c['id']; ?>)">
                     <option value="0">To Do</option>
                     <option value="1">In progress</option>
                     <option value="2">Done</option>
@@ -74,58 +76,60 @@ mysqli_close($link);
 
             </div>
             <?php
-                $link=mysqli_connect("localhost", "anas", "22173515", "osticket");
-                $sql = "select id, id_card, content, status, id_user, o.username from activities a
+            $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
+            $sql = "select id, id_card, content, status, id_user, o.username from activities a
     inner  join ost_staff o on o.staff_id =a.id_user where id_card=?";
-                $query = $link->prepare($sql);
-                $query->bind_param("i", $c['id']);
-                $query->execute();
-                $res= $query->get_result();
-                $activities =array();
-                while ($row = mysqli_fetch_array($res)){
-                    $activities[]=$row;
+            $query = $link->prepare($sql);
+            $query->bind_param("i", $c['id']);
+            $query->execute();
+            $res = $query->get_result();
+            $activities = array();
+            while ($row = mysqli_fetch_array($res)) {
+                $activities[] = $row;
+            }
+            $query->close();
+            $idc = $c['id'];
+            $todo = "<div class=''  name='todo-$idc'>";
+            $inprog = "<div class=''  style='display: none' name='inprog-$idc'>";
+            $done = "<div class=''  style='display: none' name='done-$idc'>";
+            foreach ($activities as $a) {
+                $ida = $a['id'];
+                $content = $a['content'];
+                switch ($a["status"]) {
+                    case 0:
+                        $todo .= "<div class='activity' onclick='openActivity($ida, this)'>
+<label style='float: right'>" . "assigned to : " . $a['username'] . "</label>
+<p class=''>" . $content . "</p>
+                                    </div><br>";
+                        break;
+                    case 1:
+                        $inprog .= "<div class='activity' onclick='openActivity($ida, this)'>
+<label style='float: right'>" . "assigned to : " . $a['username'] . "</label>
+<p class=''>" . $content . "</p>
+                                    </div><br>";
+                        break;
+                    case 2:
+                        $done .= "<div class='activity' onclick='openActivity($ida, this)'>
+<label style='float: right'>" . "assigned to : " . $a['username'] . "</label>
+<p class=''>" . $content . "</p>
+                                    </div><br>";
                 }
-                $query->close();
-                $idc=$c['id'];
-                $todo="<div class=''  name='todo-$idc'>";
-                $inprog="<div class=''  style='display: none' name='inprog-$idc'>";
-                $done="<div class=''  style='display: none' name='done-$idc'>";
-                foreach ($activities as $a) {
-                    $ida=$a['id'];
-                    $content=$a['content'];
-                    switch ($a["status"]){
-                        case 0:
-                            $todo.="<div class='activity' onclick='openActivity($ida)'>
-<label class='box'>".$content."</label>
-<label style='float: right'>"."assigned to : ".$a['username']."</label>
-                                    </div><br>";
-                            break;
-                        case 1:
-                            $inprog.="<div class='activity' onclick='openActivity($ida)'>
-<label class='box'>".$a['content']."</label>
-<label style='float: right'>"."assigned to : ".$content."</label>
-                                    </div><br>";
-                            break;
-                        case 2:
-                            $done.="<div class='activity' onclick='openActivity($ida)'>
-<label class='box'>".$a['content']."</label>
-<label style='float: right'>"."assigned to : ".$a['username']."</label>
-                                    </div><br>";
-                    }
-                }
-                echo "<br>".$todo."</div>";
-                echo "<br>".$inprog."</div>";
-                echo "<br>".$done."</div>";
-                ?>
+            }
+            echo "<br>" . $todo . "</div>";
+            echo "<br>" . $inprog . "</div>";
+            echo "<br>" . $done . "</div>";
+            ?>
             <br>
-            <button style="text-align: left; " onclick="addActivity(<?php echo $c['id'] ?>)"><i class="icon-plus icon-2x" style="float: left"></i>
+            <button style="text-align: left; " onclick="addActivity(<?php echo $c['id'] ?>)"><i
+                        class="icon-plus icon-2x" style="float: left"></i>
 
-                Add Activity </button>
+                Add Activity
+            </button>
         </article>
-        <?php } ?>
-        <button id="newCard"><i class="icon-plus  icon-5x"> </i> <br>Add New Card </button>
+    <?php } ?>
+    <button id="newCard"><i class="icon-plus  icon-5x"> </i> <br>Add New Card</button>
 
-    </div>
+</div>
 
 <div class="dialog draggable ui-draggable size-normal" id="popup" style="top: 107.714px; left: 166px; display: none;">
     <div id="popup-loading" style="display: none;">
@@ -137,7 +141,8 @@ mysqli_close($link);
             <h3 class="drag-handle">Add New Activity</h3>
             <b><a class="close" href="#"><i class="icon-remove-circle"></i></a></b>
             <hr>
-            <div><p id="msg_info"><i class="icon-info-sign"></i>&nbsp; Complete the form below to add a new activity.</p>
+            <div><p id="msg_info"><i class="icon-info-sign"></i>&nbsp; Complete the form below to add a new activity.
+                </p>
             </div>
             <div id="selected-org-info" style="display:none;margin:5px;">
                 <form method="post" class="org" action="">
@@ -190,7 +195,7 @@ mysqli_close($link);
                             </td>
                         </tr>
                         <tr>
-                            <td class="multi-line ">Assigned to </td>
+                            <td class="multi-line ">Assigned to</td>
                             <td>
                                 <select>
                                     <option value="-1">Default</option>
@@ -264,7 +269,8 @@ mysqli_close($link);
         </script>
     </div>
 </div>
-<div class="dialog draggable ui-draggable size-normal" id="popup-edit" style="top: 107.714px; left: 166px; display: none;">
+<div class="dialog draggable ui-draggable size-normal" id="popup-edit"
+     style="top: 107.714px; left: 166px; display: none;">
     <div id="popup-loading" style="display: none;">
         <h1 style="margin-bottom: 20px; margin-top: 6px;"><i class="icon-spinner icon-spin icon-large"></i>
             Loading ...</h1>
@@ -327,13 +333,33 @@ mysqli_close($link);
                             </td>
                         </tr>
                         <tr>
-                            <td class="multi-line ">Assigned to </td>
+                            <td class="multi-line ">Assigned to</td>
                             <td>
+                                <?php
+                                $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
+                                $query = $link->prepare("select username, staff_id, creator from ost_staff
+inner join members m on ost_staff.staff_id = m.id_user
+inner join repos r on m.id_repo = r.id
+where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =r.id
+                                 where (b.id=?)))");
+                                $query->bind_param("i", $_GET['idb']);
+                                $query->execute();
+                                $mem=$query->get_result();
+                                $members=[];
+                                while ($row = $mem->fetch_array(PDO::FETCH_LAZY))
+                                    $members[]=$row;
+                                $query->close();
+                                ?>
                                 <select>
                                     <option value="-1">Default</option>
-                                    <option>user 1</option>
-                                    <option>user 2</option>
+                                    <?php
+                                    if ($thisstaff->getId()== $members[0]['creator'])
+                                    for ($i=0;$i<count($members); $i++){?>
+                                    <option value="<?php echo $members[$i]['staff_id']; ?>">
+                                        <?php echo $members[$i]['username']; ?>
+                                    </option>
                                 </select>
+                                <?php } ?>
                             </td>
                         </tr>
                         <tr>
@@ -357,7 +383,8 @@ mysqli_close($link);
         <span class="buttons pull-left">
             <input type="reset" value="Reset">
             <input type="button" name="cancel" class="close" value="Cancel">
-            <input type="button" class="warning" style="background-color : #f33535; color: white" value="Delete" id="delete-activity">
+            <input type="button" class="warning" style="background-color : #f33535; color: white" value="Delete"
+                   id="delete-activity">
         </span>
                         <span class="buttons pull-right">
             <input type="submit" value="Edit Activity">
@@ -416,10 +443,10 @@ mysqli_close($link);
 </div>
 <?php
 
-require_once(STAFFINC_DIR.'footer.inc.php');
+require_once(STAFFINC_DIR . 'footer.inc.php');
 ?>
 
-<script  >
+<script>
     function deleteCard(id) {
         $.ajax({
             url: "ajax.php/cards/delete/" + id,
@@ -557,8 +584,8 @@ require_once(STAFFINC_DIR.'footer.inc.php');
                                 '<div class="content">' +
                                 '<p>' + description + '</p>' +
                                 '</div>' +
-                                '<br>'+
-                                '<button style="text-align: left; " onclick="addActivity('+id+')"><i class="icon-plus icon-2x" style="float: left"></i>' +
+                                '<br>' +
+                                '<button style="text-align: left; " onclick="addActivity(' + id + ')"><i class="icon-plus icon-2x" style="float: left"></i>Add Activity</button>' +
                                 '</article>'
                             ).append($("#newCard"));
 
@@ -580,103 +607,106 @@ require_once(STAFFINC_DIR.'footer.inc.php');
 
     });
 
-   /* function addActivity(id) {
-        let form = '<form action="" method="post" class="form-add">' +
-            '' +
-            '<input type="text" name="content" placeholder="New Activity">' +
-            '<br>' +
-            '<select>' +
-            '<option value=0>To Do</option>' +
-            '<option value=1> In Progress</option>' +
-            '<option value=2> Done</option>' +
-            '</select>' +
-            '<br>' +
-            '<br>' +
-            '<input  type="submit" value="Add">' +
-            '<input type="button" name="cancel-add-activity" value="Cancel">' +
-            '</form>';
-        let f = $(form)
-        console.log(f.children('input[name="cancel-add-activity"]'))
-        f.children('input[name="cancel-add-activity"]').click(function () {
-            $(this).parent().remove();
-        });
-        f.on("submit", function (e) {
-            e.preventDefault();
-            let content = $(this).children('input[name="content"]').val();
-            let status = $(this).children("select").val();
-            $.ajax({
-                url: 'ajax.php/activities/add/' + id,
-                type: 'post',
-                data: {
-                    content: content,
-                    status: status
-                },
-                success: function (data) {
+    /* function addActivity(id) {
+         let form = '<form action="" method="post" class="form-add">' +
+             '' +
+             '<input type="text" name="content" placeholder="New Activity">' +
+             '<br>' +
+             '<select>' +
+             '<option value=0>To Do</option>' +
+             '<option value=1> In Progress</option>' +
+             '<option value=2> Done</option>' +
+             '</select>' +
+             '<br>' +
+             '<br>' +
+             '<input  type="submit" value="Add">' +
+             '<input type="button" name="cancel-add-activity" value="Cancel">' +
+             '</form>';
+         let f = $(form)
+         console.log(f.children('input[name="cancel-add-activity"]'))
+         f.children('input[name="cancel-add-activity"]').click(function () {
+             $(this).parent().remove();
+         });
+         f.on("submit", function (e) {
+             e.preventDefault();
+             let content = $(this).children('input[name="content"]').val();
+             let status = $(this).children("select").val();
+             $.ajax({
+                 url: 'ajax.php/activities/add/' + id,
+                 type: 'post',
+                 data: {
+                     content: content,
+                     status: status
+                 },
+                 success: function (data) {
 
-                },
-                error: function (data) {
-                    console.log("could not add an activity");
-                }
-            })
-        })
-        $("#" + id).children('.content').append(f)
-    }*/
+                 },
+                 error: function (data) {
+                     console.log("could not add an activity");
+                 }
+             })
+         })
+         $("#" + id).children('.content').append(f)
+     }*/
 
-    let id_card=0;
+    let id_card = 0;
+
     function addActivity(id) {
-        $("#popup").css('display', 'block');
-        id_card=id;
+        $("#popup").css('display', 'block').css("top", "120px");
+        id_card = id;
     }
 
-     /*$("select[name='activity-status']").onload(function () {
-         let id=(this);
-         console.log(id);
-         $.ajax({
-             url: "ajax.php/activities/display/"+id,
-             type: "get",
-             success: function (data) {
-                 let data_json= JSON.parse(data);
-                 console.log(data_json);
-             },
-             error: function (data){
-                 console.log("could not display activities");
-             }
-         })
-     })*/
-    const id_user= <?php echo $thisstaff->getId(); ?>;
+    /*$("select[name='activity-status']").onload(function () {
+        let id=(this);
+        console.log(id);
+        $.ajax({
+            url: "ajax.php/activities/display/"+id,
+            type: "get",
+            success: function (data) {
+                let data_json= JSON.parse(data);
+                console.log(data_json);
+            },
+            error: function (data){
+                console.log("could not display activities");
+            }
+        })
+    })*/
+    const id_user = <?php echo $thisstaff->getId(); ?>;
 
-    $(document).ready(function (){
+    $(document).ready(function () {
         $("#add-activity").on("submit", function (e) {
             e.preventDefault();
             let content = $("#context").val();
 
             $.ajax({
-                url: "ajax.php/activities/add/"+id_card,
+                url: "ajax.php/activities/add/" + id_card,
                 type: "post",
                 data: {
                     content: content,
                     id_user: id_user
                 },
-                success: function (data){
+                success: function (data) {
 
-                    $("#popup").css("display", "none");
+                    $("#popup").css("display", "none")
+                    //  console.log(data)
                     location.reload();
                 },
-                error: function (data){
+                error: function (data) {
                     console.log("could not add an activity");
                 }
             })
 
-    })
+        })
 
     })
+
     function showActivities(id) {
 
-        const st=$("#as-"+id).val();
-        let todo=$("div[name='todo-"+id+"']");
+        const st = $("#as-" + id).val();
+        let todo = $("div[name='todo-" + id + "']");
 
-        let inprog=$("div[name='inprog-"+id+"']");
-        let done=$("div[name='done-"+id+"']");
+        let inprog = $("div[name='inprog-" + id + "']");
+        let done = $("div[name='done-" + id + "']");
         todo.css("display", "none");
         inprog.css("display", "none");
         done.css("display", "none");
@@ -691,56 +721,57 @@ require_once(STAFFINC_DIR.'footer.inc.php');
                 done.css("display", "block");
                 break;
             default:
-                console.log("error "+st);
+                console.log("error " + st);
 
         }
     }
-    function openActivity(id) {
-        const popup=$("#popup-edit");
-        popup.css("display", "block").css("top", "120px");
-        $("#cnt").val(content);
 
-        const form =popup.find("form");
+    function openActivity(id, element) {
+        const popup = $("#popup-edit");
+        popup.css("display", "block").css("top", "120px");
+        //$("#cnt").val(content);
+        const p = $(element).children("p").text();
+        const form = popup.find("form");
+        $("#cnt").text(p);
         $("#delete-activity").on("click", function (e) {
-           e.preventDefault();
-           fetch("ajax.php/activities/delete/"+id, {
-               method: "post"
-           }).then(res => {
-               if (res.ok){
-                   console.log("res is ok");
-               }
-               res.json()
-           })
-               .then (data => {
-                   console.log(data);
-                   popup.css("display", "none");
-                   location.reload();
-               }).catch(err => {
-                   console.log(err);
-               } )
-        })
-        form.on("submit", function(e){
             e.preventDefault();
-            let content =$("#cnt").val();
+            fetch("ajax.php/activities/delete/" + id, {
+                method: "post"
+            }).then(res => {
+                if (res.ok) {
+                    console.log("res is ok");
+                }
+                res.json()
+            })
+                .then(data => {
+                    console.log(data);
+                    popup.css("display", "none");
+                    location.reload();
+                }).catch(err => {
+                console.log(err);
+            })
+        })
+        form.on("submit", function (e) {
+            e.preventDefault();
+            let content = $("#cnt").val();
             let status = $("#sl-status").val();
             $.ajax({
                     url: "ajax.php/activities/edit/" + id,
                     type: 'POST',
-                data: {
+                    data: {
                         content: content,
-                    status: status,
-                    id_user: id_user
-                },
-                success: function (data) {
-                    console.log("success");
-                    popup.css("display", "none");
-                    location.reload();
-                },
-                error: function (data){
+                        status: status,
+                        id_user: id_user
+                    },
+                    success: function (data) {
+                        console.log("success");
+                        popup.css("display", "none");
+                        location.reload();
+                    },
+                    error: function (data) {
                         console.log("could not edit on activity");
+                    }
                 }
-                }
-
             );
         });
     }

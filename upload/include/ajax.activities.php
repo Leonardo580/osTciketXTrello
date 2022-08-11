@@ -9,6 +9,7 @@ class ActivitiesAjaxAPI extends AjaxController{
         $query->bind_param("isii",$idc, $_POST["content"], $status, $id_user);
         $query->execute();
         mysqli_close($link);
+        return $this->json_encode("cannot add an activity");
 
     }
     public function delete($id){

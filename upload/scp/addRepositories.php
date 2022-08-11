@@ -5,14 +5,16 @@ $sql="";
 require('staff.inc.php');
 if (isset($_POST['title']) && isset($_POST['description'])) {
     if (!empty($_POST['title']) && !empty($_POST['description'])) {
-        $sql = "insert into repos 
+        $sql = "insert into  repos  
     (title, description, dateCreated, creator) 
         values ('" . $_POST["title"] . "','" . $_POST["description"] . "', sysdate(),".$thisstaff->getId().")";
         $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
         if (!$link)
             die( "Error: Unable to connect to MySQL." . PHP_EOL);
         mysqli_query($link, $sql);
-        mysqli_close($link);
+        $query = $link->prepare("insert into members (id_user, id_repo) values (?, last_insert_id());");
+        $query->bind_param("i", $thisstaff->getId() );
+        $query->execute();
 
         header("Location: Repositories.php");
     }

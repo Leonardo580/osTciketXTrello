@@ -117,10 +117,10 @@ $query->close();
                         <tbody>
                         <?php
 
-                        //$members = Members::getMembers($_GET['idr']);
-                        $sql = "select u.staff_id as 'id', u.username as 'username' , u.created, u.updated from ost_staff u 
-inner join members on u.staff_id = members.id_user
-inner join repos on members.id_repo = repos.id";
+                        $idr = $_GET['idr'];
+                        $sql = "select distinct u.staff_id as 'id', u.username as 'username' , u.created, u.updated from ost_staff u 
+                                inner join members on u.staff_id = members.id_user
+                                inner join repos on members.id_repo = $idr";
                         $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
                         $result = mysqli_query($link, $sql);
                         $members = array();
@@ -168,10 +168,9 @@ inner join repos on members.id_repo = repos.id";
                                         <li>
                                             <?php
                                             $id = $m['id'];
-                                            $idr = $_GET['idr'];
-                                            if ($isTheOwner && $id!=$thisstaff->getId()) {
+                                            if ($isTheOwner && $id != $thisstaff->getId()) {
                                                 echo '
-                                            <a href="deleteMember.php?id='.$id.'&idr='.$idr.'"
+                                            <a href="deleteMember.php?id=' . $id . '&idr=' . $idr . '"
                                                class="text-danger" data-toggle="tooltip" title=""
                                                data-original-title="Delete"><i
                                                         class="far fa-trash-alt"></i></a></li>';
@@ -334,7 +333,7 @@ $link = mysqli_connect("localhost", "root", "", "osticket");
 if (mysqli_connect_errno()) {
     echo "Failed to connect to MySQL: " . mysqli_connect_error();
 }
-$idr = $_GET['idr'];
+
 $sql = "select * from boards where id_repo=$idr;";
 $result = mysqli_query($link, $sql);
 $boards = array();
@@ -526,7 +525,7 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
         });
     }
 
-    const idr = <?php echo $_GET['idr']; ?>;
+    const idrr = <?php echo $_GET['idr']; ?>;
 
     $(document).ready(() => {
         //const id_user= $("#id_staff").val();
@@ -539,7 +538,7 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
                 type: "post",
                 data: {
                     email: email,
-                    idr: idr,
+                    idr: idrr,
 
                 },
                 success: data => {

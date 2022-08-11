@@ -77,8 +77,8 @@ mysqli_close($link);
             </div>
             <?php
             $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
-            $sql = "select id, id_card, content, status, id_user, o.username from activities a
-    inner  join ost_staff o on o.staff_id =a.id_user where id_card=?";
+            $sql = "select id, id_card, content,assignedTo as 'assignedTo', status, id_user, o.username from activities a
+    inner  join ost_staff o on o.staff_id =a.assignedTo where id_card=?";
             $query = $link->prepare($sql);
             $query->bind_param("i", $c['id']);
             $query->execute();
@@ -89,27 +89,28 @@ mysqli_close($link);
             }
             $query->close();
             $idc = $c['id'];
-            $todo = "<div class=''  name='todo-$idc'>";
-            $inprog = "<div class=''  style='display: none' name='inprog-$idc'>";
-            $done = "<div class=''  style='display: none' name='done-$idc'>";
+            $todo = "<div class='container'  name='todo-$idc' >";
+            $inprog = "<div class='container'  style='display: none' name='inprog-$idc' >";
+            $done = "<div class='container'  style='display: none' name='done-$idc' >";
             foreach ($activities as $a) {
                 $ida = $a['id'];
                 $content = $a['content'];
+                $assignedTo= $a['assignedTo'];
                 switch ($a["status"]) {
                     case 0:
-                        $todo .= "<div class='activity' onclick='openActivity($ida, this)'>
+                        $todo .= "<div class='activity drag' draggable='true' onclick='openActivity($ida, this,$assignedTo )'>
 <label style='float: right'>" . "assigned to : " . $a['username'] . "</label>
 <p class=''>" . $content . "</p>
                                     </div><br>";
                         break;
                     case 1:
-                        $inprog .= "<div class='activity' onclick='openActivity($ida, this)'>
+                        $inprog .= "<div class='activity drag' onclick='openActivity($ida, this,$assignedTo)'>
 <label style='float: right'>" . "assigned to : " . $a['username'] . "</label>
 <p class=''>" . $content . "</p>
                                     </div><br>";
                         break;
                     case 2:
-                        $done .= "<div class='activity' onclick='openActivity($ida, this)'>
+                        $done .= "<div class='activity drag' onclick='openActivity($ida, this, $assignedTo)'>
 <label style='float: right'>" . "assigned to : " . $a['username'] . "</label>
 <p class=''>" . $content . "</p>
                                     </div><br>";
@@ -197,10 +198,32 @@ mysqli_close($link);
                         <tr>
                             <td class="multi-line ">Assigned to</td>
                             <td>
-                                <select>
-                                    <option value="-1">Default</option>
-                                    <option>user 1</option>
-                                    <option>user 2</option>
+                                <?php
+                                $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
+                                $query = $link->prepare("select username, staff_id, creator from ost_staff
+inner join members m on ost_staff.staff_id = m.id_user
+inner join repos r on m.id_repo = r.id
+where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =r.id
+                                 where (b.id=?)))");
+                                $query->bind_param("i", $_GET['idb']);
+                                $query->execute();
+                                $mem = $query->get_result();
+                                $members = [];
+                                while ($row = $mem->fetch_array(PDO::FETCH_LAZY))
+                                    $members[] = $row;
+                                $query->close();
+                                ?>
+                                <select id="assigned-id">
+
+                                    <?php
+                                    if ($thisstaff->getId() == $members[0]['creator'])
+                                        for ($i = 0; $i < count($members); $i++) {
+                                            ?>
+                                            <option value="<?php echo $members[$i]['staff_id']; ?>">
+                                                <?php echo $members[$i]['username']; ?>
+                                            </option>
+                                        <?php } ?>
+
                                 </select>
                             </td>
                         </tr>
@@ -335,32 +358,20 @@ mysqli_close($link);
                         <tr>
                             <td class="multi-line ">Assigned to</td>
                             <td>
-                                <?php
-                                $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
-                                $query = $link->prepare("select username, staff_id, creator from ost_staff
-inner join members m on ost_staff.staff_id = m.id_user
-inner join repos r on m.id_repo = r.id
-where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =r.id
-                                 where (b.id=?)))");
-                                $query->bind_param("i", $_GET['idb']);
-                                $query->execute();
-                                $mem=$query->get_result();
-                                $members=[];
-                                while ($row = $mem->fetch_array(PDO::FETCH_LAZY))
-                                    $members[]=$row;
-                                $query->close();
-                                ?>
-                                <select>
-                                    <option value="-1">Default</option>
+
+                                <select id="assigned-id">
                                     <?php
-                                    if ($thisstaff->getId()== $members[0]['creator'])
-                                    for ($i=0;$i<count($members); $i++){?>
-                                    <option value="<?php echo $members[$i]['staff_id']; ?>">
-                                        <?php echo $members[$i]['username']; ?>
-                                    </option>
+                                    if ($thisstaff->getId() == $members[0]['creator'])
+                                        for ($i = 0; $i < count($members); $i++) {
+                                            ?>
+                                            <option value="<?php echo $members[$i]['staff_id']; ?>">
+                                                <?php echo $members[$i]['username']; ?>
+                                            </option>
+                                        <?php } ?>
+
                                 </select>
-                                <?php } ?>
                             </td>
+
                         </tr>
                         <tr>
                             <td class="">
@@ -676,14 +687,16 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
     $(document).ready(function () {
         $("#add-activity").on("submit", function (e) {
             e.preventDefault();
-            let content = $("#context").val();
+            const content = $("#context").val();
+            const assignedTo = $(this).find("select").val();
 
             $.ajax({
                 url: "ajax.php/activities/add/" + id_card,
                 type: "post",
                 data: {
                     content: content,
-                    id_user: id_user
+                    id_user: id_user,
+                    assignedTo: assignedTo
                 },
                 success: function (data) {
 
@@ -726,12 +739,20 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
         }
     }
 
-    function openActivity(id, element) {
+    function openActivity(id, element, assignedTo) {
         const popup = $("#popup-edit");
         popup.css("display", "block").css("top", "120px");
         //$("#cnt").val(content);
         const p = $(element).children("p").text();
         const form = popup.find("form");
+        $("#assigned-id").find("option").each((e,t) => {
+            const opt=$(t)
+
+            if (opt.val()==assignedTo) {
+                console.log(assignedTo);
+                opt.attr("selected", "true");
+            }
+        })
         $("#cnt").text(p);
         $("#delete-activity").on("click", function (e) {
             e.preventDefault();
@@ -755,13 +776,16 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
             e.preventDefault();
             let content = $("#cnt").val();
             let status = $("#sl-status").val();
+            const assignedto = $("#assigned-id").val();
+            console.log(assignedto);
             $.ajax({
                     url: "ajax.php/activities/edit/" + id,
                     type: 'POST',
                     data: {
                         content: content,
                         status: status,
-                        id_user: id_user
+                        id_user: id_user,
+                        assignedTo: assignedto
                     },
                     success: function (data) {
                         console.log("success");
@@ -769,10 +793,47 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
                         location.reload();
                     },
                     error: function (data) {
-                        console.log("could not edit on activity");
+                        console.log("could not edit on activity" + data);
                     }
                 }
             );
         });
     }
+
+
+    const draggable = document.querySelectorAll(".drag");
+    const containers = document.querySelectorAll(".container");
+    draggable.forEach(draggable => {
+        draggable.addEventListener('dragstart', () => {
+            draggable.classList.add("dragging");
+        })
+        draggable.addEventListener('dragged', () => {
+            draggable.classList.remove("dragging")
+        })
+    })
+
+    function getDragAfterElement(container, y) {
+        const draggbleElements = [...container.querySelectorAll("drag:not(.dragging")]
+        return draggbleElements.reduce((closest, child) => {
+            const boc = child.getBoundingRect();
+            const offset = y - box.top - box.height / 2
+            if (offset < 0 && offset > closest.offset) {
+                return {offset: offset, element: child}
+            } else
+                return closest
+        }, {offset: Number.NEGATIVE_INFINITY}).element;
+    }
+
+    containers.forEach(container => {
+        container.addEventListener("dragover", e => {
+            e.preventDefault();
+            const afterElement = getDragAfterElement(container, e.clientY)
+            const draggable = document.querySelector(".dragging");
+            if (afterElement == null) {
+                container.appendChild(draggable);
+            } else
+                container.insertBefore(draggable, afterElement);
+        })
+    })
+
 </script>

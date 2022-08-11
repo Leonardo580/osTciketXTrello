@@ -29,7 +29,7 @@ class MembersAjaxAPI extends AjaxController {
                 $query->bind_param("siii", $token, $idstaff, $_POST['idr'], $_SERVER['REQUEST_TIME']);
                 $query->execute();
                 $query->close();
-                //mail($email, $subject, $message, $headers);
+                mail($email, $subject, $message, $headers);
                 return $this->json_encode("done");
             }
         }

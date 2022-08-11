@@ -45,9 +45,24 @@ i:hover {
     padding: 10px;
     border-style: solid;
     border-color : gray;
+    background-color: whitesmoke;
 }
-.activity:hover {
+/*.activity:hover {
     cursor: pointer;
+}*/
+
+.drag-over {
+    border: solid 3px #c72727;
 }
 
+.drag {
+    cursor: move;
+}
+.drag.dragging {
+    opacity: .5;
+}
+.container {
+    background-color: #565555;
+    opacity: .8;
 
+}

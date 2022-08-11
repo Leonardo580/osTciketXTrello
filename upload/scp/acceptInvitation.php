@@ -30,7 +30,7 @@ if (!$res){
         $q->execute();
         $q->close();
         echo "<h1>the invite has been accepted</h1>";
-        echo "<a href='DetailedRepo.php?idr=$idr' >Click here<a> to proceed to the repository  </h2>";
+        echo "<a href='DetailedRepo.php?idr=$idr' >Click here</a> to proceed to the repository  </h2>";
 
 
 

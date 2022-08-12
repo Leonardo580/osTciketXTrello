@@ -123,9 +123,7 @@ mysqli_close($link);
             ?>
             <br>
             <button style="text-align: left; " onclick="addActivity(<?php echo $c['id'] ?>)"><i
-                        class="icon-plus icon-2x" style="float: left"></i>
-
-                Add Activity
+                        class="icon-plus icon-2x" style="float: left">Add Activity</i>
             </button>
         </article>
     <?php } ?>
@@ -597,7 +595,7 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
                                 '<p>' + description + '</p>' +
                                 '</div>' +
                                 '<br>' +
-                                '<button style="text-align: left; " onclick="addActivity(' + id + ')"><i class="icon-plus icon-2x" style="float: left"></i>Add Activity</button>' +
+                                '<button style="text-align: left; " onclick="addActivity(' + id + ')"><i class="icon-plus icon-2x" style="float: left">Add Activity</i></button>' +
                                 '</article>'
                             ).append($("#newCard"));
 
@@ -805,6 +803,17 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
         })
 
         draggable.addEventListener('dragend', () => {
+            const idc = $(draggable).parent().parent().attr("id");
+            const st = $(draggable).attr('onclick');
+            const ida = st.substring(st.indexOf("(")+1, st.indexOf(','));
+            $.ajax({
+                url : "ajax.php/activities/changeCard",
+                type: "post",
+                data: {
+                    id_card: idc,
+                    ida: ida
+                }
+            });
             draggable.classList.remove('dragging')
         })
     })

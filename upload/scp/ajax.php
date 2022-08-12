@@ -255,7 +255,8 @@ $dispatcher = patterns('',
         url("^add/(?P<idc>\d+)$", "add"),
     url("^display/(?P<id>\d+)$", "display"),
     url("^edit/(?P<id>\d+)$", "edit"),
-    url("^delete/(?P<id>\d+)$", "delete")
+    url("^delete/(?P<id>\d+)$", "delete"),
+    url("^changeCard", "changeCard")
     )),
     //function of members
 url("^/members/", patterns("ajax.members.php:MembersAjaxAPI",

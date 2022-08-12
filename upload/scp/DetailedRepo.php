@@ -1,7 +1,6 @@
 <?php
-require('staff.inc.php');
+require('checkaccount.php');
 require_once(INCLUDE_DIR . 'class.task.php');
-
 require_once(INCLUDE_DIR . 'class.export.php');
 include "class.member.php";
 //include "../include/class.email.php";

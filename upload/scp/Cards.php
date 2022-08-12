@@ -1,6 +1,6 @@
 <?php
 
-require('staff.inc.php');
+require('checkaccount.php');
 $ost->addExtraHeader('<script type="text/javascript" src="js/ticket.js?e148727"></script>');
 $ost->addExtraHeader('<script type="text/javascript" src="js/thread.js?e148727"></script>');
 $ost->addExtraHeader('<meta name="tip-namespace" content="tasks.queue" />',
@@ -9,6 +9,7 @@ $nav->setTabActive('Repositories');
 $open_name = _P('queue-name',
     /* This is the name of the open tasks queue */
     'Open');
+
 
 
 require_once(STAFFINC_DIR . 'header.inc.php');
@@ -89,9 +90,9 @@ mysqli_close($link);
             }
             $query->close();
             $idc = $c['id'];
-            $todo = "<div class='container'  name='todo-$idc' >";
-            $inprog = "<div class='container'  style='display: none' name='inprog-$idc' >";
-            $done = "<div class='container'  style='display: none' name='done-$idc' >";
+            $todo = "<div class='cont'  name='todo-$idc' >";
+            $inprog = "<div class='cont'  style='display: none' name='inprog-$idc' >";
+            $done = "<div class='cont'  style='display: none' name='done-$idc' >";
             foreach ($activities as $a) {
                 $ida = $a['id'];
                 $content = $a['content'];
@@ -104,13 +105,13 @@ mysqli_close($link);
                                     </div><br>";
                         break;
                     case 1:
-                        $inprog .= "<div class='activity drag' onclick='openActivity($ida, this,$assignedTo)'>
+                        $inprog .= "<div class='activity drag' draggable='true' onclick='openActivity($ida, this,$assignedTo)'>
 <label style='float: right'>" . "assigned to : " . $a['username'] . "</label>
 <p class=''>" . $content . "</p>
                                     </div><br>";
                         break;
                     case 2:
-                        $done .= "<div class='activity drag' onclick='openActivity($ida, this, $assignedTo)'>
+                        $done .= "<div class='activity drag' draggable='true' onclick='openActivity($ida, this, $assignedTo)'>
 <label style='float: right'>" . "assigned to : " . $a['username'] . "</label>
 <p class=''>" . $content . "</p>
                                     </div><br>";
@@ -213,13 +214,13 @@ where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =
                                     $members[] = $row;
                                 $query->close();
                                 ?>
-                                <select id="assigned-id">
+                                <select title="assigned to" id="assigned-id" >
 
                                     <?php
                                     if ($thisstaff->getId() == $members[0]['creator'])
                                         for ($i = 0; $i < count($members); $i++) {
                                             ?>
-                                            <option value="<?php echo $members[$i]['staff_id']; ?>">
+                                            <option value="<?php echo $members[$i]['staff_id']; ?>" >
                                                 <?php echo $members[$i]['username']; ?>
                                             </option>
                                         <?php } ?>
@@ -359,7 +360,7 @@ where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =
                             <td class="multi-line ">Assigned to</td>
                             <td>
 
-                                <select id="assigned-id">
+                                <select title="assigned to" id="assigned-id" style="width: 10rem">
                                     <?php
                                     if ($thisstaff->getId() == $members[0]['creator'])
                                         for ($i = 0; $i < count($members); $i++) {
@@ -745,14 +746,8 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
         //$("#cnt").val(content);
         const p = $(element).children("p").text();
         const form = popup.find("form");
-        $("#assigned-id").find("option").each((e,t) => {
-            const opt=$(t)
+        $("#assigned-id").children("option[value='"+assignedTo+"']")
 
-            if (opt.val()==assignedTo) {
-                console.log(assignedTo);
-                opt.attr("selected", "true");
-            }
-        })
         $("#cnt").text(p);
         $("#delete-activity").on("click", function (e) {
             e.preventDefault();
@@ -801,39 +796,85 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
     }
 
 
-    const draggable = document.querySelectorAll(".drag");
-    const containers = document.querySelectorAll(".container");
-    draggable.forEach(draggable => {
+    const draggables = document.querySelectorAll('.drag')
+    const containers = document.querySelectorAll('.cont')
+
+    draggables.forEach(draggable => {
         draggable.addEventListener('dragstart', () => {
-            draggable.classList.add("dragging");
+            draggable.classList.add('dragging')
         })
-        draggable.addEventListener('dragged', () => {
-            draggable.classList.remove("dragging")
+
+        draggable.addEventListener('dragend', () => {
+            draggable.classList.remove('dragging')
+        })
+    })
+
+    containers.forEach(container => {
+        container.addEventListener('dragover', e => {
+            e.preventDefault()
+            const afterElement = getDragAfterElement(container, e.clientY)
+            const draggable = document.querySelector('.dragging')
+            if (afterElement == null) {
+                container.appendChild(draggable)
+            } else {
+                container.insertBefore(draggable, afterElement)
+            }
         })
     })
 
     function getDragAfterElement(container, y) {
-        const draggbleElements = [...container.querySelectorAll("drag:not(.dragging")]
-        return draggbleElements.reduce((closest, child) => {
-            const boc = child.getBoundingRect();
+        const draggableElements = [...container.querySelectorAll('.drag:not(.dragging)')]
+
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect()
             const offset = y - box.top - box.height / 2
             if (offset < 0 && offset > closest.offset) {
-                return {offset: offset, element: child}
-            } else
+                return { offset: offset, element: child }
+            } else {
                 return closest
-        }, {offset: Number.NEGATIVE_INFINITY}).element;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element
     }
 
-    containers.forEach(container => {
-        container.addEventListener("dragover", e => {
-            e.preventDefault();
-            const afterElement = getDragAfterElement(container, e.clientY)
-            const draggable = document.querySelector(".dragging");
-            if (afterElement == null) {
-                container.appendChild(draggable);
-            } else
-                container.insertBefore(draggable, afterElement);
-        })
-    })
+
 
 </script>
+<!--<script type="module">
+    import interact from 'https://cdn.interactjs.io/v1.10.17/interactjs/index.js'
+    interact('.container').dropzone({
+        accept: ".drag",
+        overlap: 0.7,
+        ondropactiviate: (e)=> {
+            e.target.classList.add('.dragging')
+        },
+        ondragenter: e => {
+            var draggableElement = e.relatedTarget;
+            var dropzoneElement = e.target;
+            dropzoneElement.classList.add('drop-target');
+            draggableElement.classList.add('can-drop');
+
+        },
+        ondragleave: e => {
+            e.target.classList.remove('drop-target');
+            e.relatedTarget.classList.remove('can-drop');
+        },
+        ondrop : e => {
+            e.relatedTarget.text='Dropped';
+        },
+        ondropdeactivate: e => {
+            e.target.classList.remove('drop-active');
+            e.target.classList.remove('drop-target');
+        }
+    })
+    interact('.drag-drop').draggable({
+        inertia: true,
+        modifier: [
+            interact.modifier.restrictRect({
+                restriction: 'parent',
+                endOnly: true
+            })
+        ],
+        autoScroll: true,
+        listeners: {move : dragMoveListener }
+    })
+</script>-->

@@ -25,6 +25,7 @@ mysqli_close($link);
 
 ?>
 <link rel="stylesheet" href="../css/myStyle.css">
+<a href="ExportRepo.php" class="button action-button"  style="float: right;"><i class="icon-download" ></i> Export</a>
 <h2 style="color: black">Board's Cards: </h2>
 <hr>
 <!--<div class="row">

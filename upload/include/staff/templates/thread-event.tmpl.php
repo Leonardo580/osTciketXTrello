@@ -3,7 +3,7 @@
         <span class="type-icon">
           <i class="faded icon-<?php echo $event->getIcon(); ?>"></i>
         </span>
-        <span class="faded description">
+        <span class="faded des">
             <?php echo $desc; ?>
         </span>
 </div>

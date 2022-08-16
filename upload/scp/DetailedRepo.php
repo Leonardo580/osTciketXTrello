@@ -78,14 +78,8 @@ $query->close();
         data-toggle="popover" data-placement="bottom" data-content="">
     <i class="icon-plus"></i>
 </button>-->
-<button id="addnew" style="float: right;"><i class="icon-plus"></i></button>
-<h1>Title: <b><?php echo $repository['title']; ?></b></h1>
-<div class="content">
-    <p>Description :
-        <?php echo $repository['description']; ?>
-    </p>
-</div>
-<form method="post" action="" id="invite-members" class="form">
+<link  rel="stylesheet" href="../css/myStyle.css">
+<form method="post" action="" id="invite-members" class="form" style="float: right; margin: 1rem">
     <?php
     csrf_token();
     ?>
@@ -95,6 +89,14 @@ $query->close();
     <input id="email" name="email" type="email" placeholder="email" style="width: 200px;">
     <input type="submit" value="Invite">
 </form>
+
+<h1 class="title">Title: <b><?php echo $res['title']; ?></b></h1>
+<div class="des">
+    <h3><strong>Description :</strong></h3>
+    <p>
+        <?php echo $res['description']; ?>
+    </p>
+</div>
 <br>
 <link rel="stylesheet" href="css/Members.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css"
@@ -108,7 +110,7 @@ $query->close();
                     <table class="table manage-candidates-top mb-0">
                         <thead>
                         <tr>
-                            <th>Member Name</th>
+                            <th>Member's Name</th>
                             <th class="text-center">Status</th>
                             <th class="action text-right">Action</th>
                         </tr>
@@ -144,12 +146,12 @@ $query->close();
                                                 <h5 class="mb-0"><a href="#"><?php echo $m['username'] ?></a></h5>
                                             </div>
                                             <div class="candidate-list-option">
-                                                <ul class="list-unstyled">
+                                                <!--<ul class="list-unstyled">
                                                     <li><i class="fas fa-filter pr-1"></i>Information Technology</li>
                                                     <li><i class="fas fa-map-marker-alt pr-1"></i>Rolling Meadows, IL
                                                         60008
                                                     </li>
-                                                </ul>
+                                                </ul>-->
                                             </div>
                                         </div>
                                     </div>
@@ -343,6 +345,7 @@ while ($row = mysqli_fetch_array($result)) {
 ?>
 <br>
 <br>
+<button id="addnew" style="float: right;"><i class="icon-plus"></i></button>
 <section class="">Boards</section>
 <hr>
 <br>

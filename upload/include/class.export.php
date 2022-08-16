@@ -176,6 +176,12 @@ class Export {
 
         return false;
     }
+    //new methods
+    static function dumpCards($sql, $how='csv'){
+        $cards=$sql->models()
+            ->select_related("activities");
+
+    }
 
     static function saveUsers($sql, $filename, $how='csv') {
 

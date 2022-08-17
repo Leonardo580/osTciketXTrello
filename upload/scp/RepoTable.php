@@ -119,8 +119,9 @@ $count=0;
 $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
 if (!$link)
     die( "Error: Unable to connect to MySQL." . PHP_EOL);
-$sql = "select id, title, description ,creator,username, dateCreated from repos inner join ost_staff os on repos.creator = os.staff_id 
-    where creator=".$thisstaff->getId();
+$sql = "select id, title, description ,creator,username, dateCreated from repos
+inner join members m on m.id_repo=id and m.id_user=".$thisstaff->getId().
+" inner join ost_staff os on creator = os.staff_id";
 $result = mysqli_query($link, $sql);
 $repositories = array();
 while($row = mysqli_fetch_array($result)){

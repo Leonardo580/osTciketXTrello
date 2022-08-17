@@ -87,3 +87,28 @@ i:hover {
     border-radius: 5px;
     padding: 1rem;
 }
+
+.todo {
+    background-color: #b09e9c;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+.in-progress {
+    background-color: #E8F9FD;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.done {
+    background-color: #59CE8F;
+    padding: 1rem;
+    margin-top: 1rem;
+
+
+}
+.overdue {
+    background-color: #ff0404;
+    padding: 1rem;
+    margin-top: 1rem;
+    color: white;
+}

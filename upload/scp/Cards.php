@@ -10,47 +10,12 @@ $open_name = _P('queue-name',
     /* This is the name of the open tasks queue */
     'Open');
 
-if ($_REQUEST["a"]){
-    function filterData(&$str): void
-    {
-        $str = preg_replace("/\t/", "\\t", $str);
-        $str = preg_replace("/\r?\n/", "\\n", $str);
-        if (strstr($str, ""))
-            $str = '"' . str_replace('"', '""', $str) . '"';
-    }
 
-    $filename = "activities-data_" . date("Y-m-d") . ".xls";
-
-    $fileds = ["ID", "Card", "user", "content", "status", "assigned to"];
-
-    $excelData = implode("\t", array_values($fileds)) . "\n";
-
-    $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
-    $res = mysqli_query($link, "select a.id, c.title, o.username as  'us', content, status, os.username as 'uss' from activities a
-                                inner join cards c on a.id_card = c.id
-                                inner join ost_staff o on staff_id=id_user
-inner join ost_staff os on os.staff_id=assignedTo;");
-    $status = [0 => "To Do", 1 => "In Progress", 2 => "Done"];
-    if ($res->num_rows > 0) {
-        while ($row = mysqli_fetch_array($res)) {
-            $linedata = [$row['id'], $row['title'], $row['us'], $row['content'], $status[$row["status"]], $row["uss"]];
-            array_walk($linedata, "filterData");
-            $excelData .= implode("\t", array_values($linedata)) . "\n";
-        }
-    } else {
-        $excelData .= "No records were found" . "\n";
-    }
-
-    /*
-    header("Content-Type: application/vnd.ms-excel");
-    header("Content-Disposition: attachment; filename=\"$filename\"");*/
-//echo $excelData;
-
-    Http::download($filename, "text/csv", $excelData);
-}
 
 require_once(STAFFINC_DIR . 'header.inc.php');
-
+$link = mysqli_connect("localhost", "anas", "22173515", "osticket");
+$link->query("call updateStatus();");
+$link->close();
 $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
 $sql = "select id, id_board, title, description from cards where id_board=" . $_GET['idb'];
 $result = mysqli_query($link, $sql);
@@ -58,7 +23,9 @@ $cards = array();
 while ($row = mysqli_fetch_array($result)) {
     $cards[] = $row;
 }
+
 mysqli_close($link);
+
 
 ?>
 <link rel="stylesheet" href="../css/myStyle.css">
@@ -111,12 +78,13 @@ mysqli_close($link);
                     <option value="0">To Do</option>
                     <option value="1">In progress</option>
                     <option value="2">Done</option>
+                    <option value="3">Overdue</option>
                 </select>
 
             </div>
             <?php
             $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
-            $sql = "select id, id_card, content,assignedTo as 'assignedTo', status, id_user, o.username from activities a
+            $sql = "select id, id_card, content,assignedTo as 'assignedTo', status, id_user, o.username, expected from activities a
     inner  join ost_staff o on o.staff_id =a.assignedTo where id_card=?";
             $query = $link->prepare($sql);
             $query->bind_param("i", $c['id']);
@@ -126,38 +94,57 @@ mysqli_close($link);
             while ($row = mysqli_fetch_array($res)) {
                 $activities[] = $row;
             }
+
             $query->close();
             $idc = $c['id'];
             $todo = "<div class='cont'  name='todo-$idc' >";
             $inprog = "<div class='cont'  style='display: none' name='inprog-$idc' >";
             $done = "<div class='cont'  style='display: none' name='done-$idc' >";
+            $overdue = "<div class='cont'  style='display: none' name='over-$idc' >";
             foreach ($activities as $a) {
                 $ida = $a['id'];
                 $content = $a['content'];
                 $assignedTo= $a['assignedTo'];
+                $expected =$a['expected'];
+                $idc=$a['id_user'];
+                $d = date_diff(date_create($expected), date_create())->d;
+                if ($d ==1)
+                    $expected="Tomorrow";
+                elseif ($d <1)
+                    $expected="To Day";
                 switch ($a["status"]) {
                     case 0:
-                        $todo .= "<div class='activity drag' draggable='true' onclick='openActivity($ida, this,$assignedTo )'>
+                        $todo .= "<div class='activity drag todo' draggable='true' onclick='openActivity($ida, this,$assignedTo, $idc )'>
 <label style='float: right'>" . "assigned to : " . $a['username'] . "</label>
 <p class=''>" . $content . "</p>
+<div>".$expected."</div>
                                     </div><br>";
                         break;
                     case 1:
-                        $inprog .= "<div class='activity drag' draggable='true' onclick='openActivity($ida, this,$assignedTo)'>
+                        $inprog .= "<div class='activity drag in-progress' draggable='true' onclick='openActivity($ida, this,$assignedTo, $idc)'>
 <label style='float: right'>" . "assigned to : " . $a['username'] . "</label>
 <p class=''>" . $content . "</p>
+<div>".$expected."</div>
                                     </div><br>";
                         break;
                     case 2:
-                        $done .= "<div class='activity drag' draggable='true' onclick='openActivity($ida, this, $assignedTo)'>
+                        $done .= "<div class='activity drag done' draggable='true' onclick='openActivity($ida, this, $assignedTo, $idc)'>
 <label style='float: right'>" . "assigned to : " . $a['username'] . "</label>
-<p class=''>" . $content . "</p>
+<p class='' style='text-decoration: line-through;'>" . $content . "</p>
+<div>".$expected."</div>
+                                    </div><br>";
+                    case 3:
+                        $overdue.="<div class='activity drag overdue' draggable='true' onclick='openActivity($ida, this, $assignedTo, $idc)'>
+<label style='float: right'>" . "assigned to : " . $a['username'] . "</label>
+<p class='' >" . $content . "</p>
+<div>".$expected."</div>
                                     </div><br>";
                 }
             }
             echo "<br>" . $todo . "</div>";
-            echo "<br>" . $inprog . "</div>";
-            echo "<br>" . $done . "</div>";
+            echo   $inprog . "</div>";
+            echo   $done . "</div>";
+            echo   $overdue . "</div>";
             ?>
             <br>
             <button style="text-align: left; " onclick="addActivity(<?php echo $c['id'] ?>)"><i
@@ -250,10 +237,11 @@ where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =
                                     $members[] = $row;
                                 $query->close();
                                 ?>
-                                <select title="assigned to" id="assigned-id" >
+                                <select title="assigned to" id="assigned-id" disabled="<?php $creator = $members[0]['creator'];
+                                echo $thisstaff->getId() == $creator ?>">
 
                                     <?php
-                                    if ($thisstaff->getId() == $members[0]['creator'])
+                                    if ($thisstaff->getId() == $creator)
                                         for ($i = 0; $i < count($members); $i++) {
                                             ?>
                                             <option value="<?php echo $members[$i]['staff_id']; ?>" >
@@ -262,6 +250,12 @@ where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =
                                         <?php } ?>
 
                                 </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="required">Expected to be delivered :</td>
+                            <td>
+                                <input type="date" min="<?=  date("Y-m-d"); ?>" >
                             </td>
                         </tr>
 
@@ -398,17 +392,23 @@ where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =
 
                                 <select title="assigned to" id="assigned-id" style="width: 10rem">
                                     <?php
-                                    if ($thisstaff->getId() == $members[0]['creator'])
+                                    if ($thisstaff->getId() == $creator)
                                         for ($i = 0; $i < count($members); $i++) {
                                             ?>
                                             <option value="<?php echo $members[$i]['staff_id']; ?>">
-                                                <?php echo $members[$i]['username']; ?>
+                                                <?php echo $members[$i]['username'];?>
                                             </option>
                                         <?php } ?>
 
                                 </select>
                             </td>
 
+                        </tr>
+                        <tr>
+                            <td>Expected to be delivered :</td>
+                            <td>
+                                <input type="date" min="<?=  date("Y-m-d"); ?>">
+                            </td>
                         </tr>
                         <tr>
                             <td class="">
@@ -419,6 +419,7 @@ where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =
                                     <option value="0">To Do</option>
                                     <option value="1">In Progress</option>
                                     <option value="2">Done</option>
+                                    <option value="3">Overdue</option>
                                 </select>
                             </td>
                         </tr>
@@ -725,15 +726,22 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
         $("#add-activity").on("submit", function (e) {
             e.preventDefault();
             const content = $("#context").val();
-            const assignedTo = $(this).find("select").val();
 
+            const form = $(this);
+            const select = form.find("select");
+            let assignedTo=id_user;
+            console.log();
+            if (!select.is("[disabled]"))
+             assignedTo = select.val();
+            const expected=form.find("input[type='date']").val();
             $.ajax({
                 url: "ajax.php/activities/add/" + id_card,
                 type: "post",
                 data: {
                     content: content,
                     id_user: id_user,
-                    assignedTo: assignedTo
+                    assignedTo: assignedTo,
+                    expected: expected
                 },
                 success: function (data) {
 
@@ -757,9 +765,11 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
 
         let inprog = $("div[name='inprog-" + id + "']");
         let done = $("div[name='done-" + id + "']");
+        let overdue = $("div[name='over-" + id + "']");
         todo.css("display", "none");
         inprog.css("display", "none");
         done.css("display", "none");
+        overdue.css("display", "none")
         switch (parseInt(st)) {
             case 0:
                 todo.css("display", "block");
@@ -770,65 +780,72 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
             case 2:
                 done.css("display", "block");
                 break;
+            case 3:
+                overdue.css("display", "block");
+                break;
             default:
                 console.log("error " + st);
 
         }
     }
+const creator = <?php echo $creator; ?>;
+    function openActivity(id, element, assignedTo, idc) {
+        if (id_user==idc || id_user==creator) {
+            const popup = $("#popup-edit");
+            popup.css("display", "block").css("top", "120px");
+            //$("#cnt").val(content);
+            const p = $(element).children("p").text();
+            const form = popup.find("form");
+            $("#assigned-id").children("option[value='" + assignedTo + "']")
 
-    function openActivity(id, element, assignedTo) {
-        const popup = $("#popup-edit");
-        popup.css("display", "block").css("top", "120px");
-        //$("#cnt").val(content);
-        const p = $(element).children("p").text();
-        const form = popup.find("form");
-        $("#assigned-id").children("option[value='"+assignedTo+"']")
-
-        $("#cnt").text(p);
-        $("#delete-activity").on("click", function (e) {
-            e.preventDefault();
-            fetch("ajax.php/activities/delete/" + id, {
-                method: "post"
-            }).then(res => {
-                if (res.ok) {
-                    console.log("res is ok");
-                }
-                res.json()
-            })
-                .then(data => {
-                    console.log(data);
-                    popup.css("display", "none");
-                    location.reload();
-                }).catch(err => {
-                console.log(err);
-            })
-        })
-        form.on("submit", function (e) {
-            e.preventDefault();
-            let content = $("#cnt").val();
-            let status = $("#sl-status").val();
-            const assignedto = $("#assigned-id").val();
-            console.log(assignedto);
-            $.ajax({
-                    url: "ajax.php/activities/edit/" + id,
-                    type: 'POST',
-                    data: {
-                        content: content,
-                        status: status,
-                        id_user: id_user,
-                        assignedTo: assignedto
-                    },
-                    success: function (data) {
-                        console.log("success");
+            $("#cnt").text(p);
+            $("#delete-activity").on("click", function (e) {
+                e.preventDefault();
+                fetch("ajax.php/activities/delete/" + id, {
+                    method: "post"
+                }).then(res => {
+                    if (res.ok) {
+                        console.log("res is ok");
+                    }
+                    res.json()
+                })
+                    .then(data => {
+                        console.log(data);
                         popup.css("display", "none");
                         location.reload();
-                    },
-                    error: function (data) {
-                        console.log("could not edit on activity" + data);
+                    }).catch(err => {
+                    console.log(err);
+                })
+            })
+            form.on("submit", function (e) {
+                e.preventDefault();
+                let content = $("#cnt").val();
+                let status = $("#sl-status").val();
+                const assignedto = $("#assigned-id").val();
+                const expected = $(this).find("input[type='date']").val();
+                console.log(assignedto);
+                $.ajax({
+                        url: "ajax.php/activities/edit/" + id,
+                        type: 'POST',
+                        data: {
+                            content: content,
+                            status: status,
+                            id_user: id_user,
+                            assignedTo: assignedto,
+                            expected: expected
+                        },
+                        success: function (data) {
+                            console.log("success");
+                            popup.css("display", "none");
+                            location.reload();
+                        },
+                        error: function (data) {
+                            console.log("could not edit on activity" + data);
+                        }
                     }
-                }
-            );
-        });
+                );
+            });
+        }
     }
 
 

@@ -175,7 +175,7 @@ class Export {
                                 inner join cards c on a.id_card = c.id
                                 inner join ost_staff o on staff_id=id_user
 inner join ost_staff os on os.staff_id=assignedTo;");
-        $status=[0 => "To Do", 1 => "In Progress", 2 => "Done"];
+        $status=[0 => "To Do", 1 => "In Progress", 2 => "Done", 3 => "Overdue"];
         if ($res->num_rows>0){
             while($row = mysqli_fetch_array($res)){
                 $linedata=[$row['id'], $row['title'], $row['us'], $row['content'], $status[$row["status"]], $row["uss"]];
@@ -191,12 +191,7 @@ inner join ost_staff os on os.staff_id=assignedTo;");
 static function saveCards(){
     $filename="activities-data_".date("Y-m-d").".xls";
         ob_start();
-        //self::dumpCards();
-    self::dumpQuery("select id, id_repo, title from boards", [
-        "id"=> "ID",
-        "id_repo" => "Id repository",
-        "title" => "Title"
-    ], "csv");
+        self::dumpCards();
         $cards=ob_get_contents();
         ob_clean();
         Http::download($filename, "text/csv", $cards);

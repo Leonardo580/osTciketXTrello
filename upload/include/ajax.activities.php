@@ -52,8 +52,8 @@ class ActivitiesAjaxAPI extends AjaxController{
     public function changeCard()
     {
         $link=mysqli_connect("localhost", "anas", "22173515", "osticket");
-        $query=$link->prepare("update activities set  id_card=? where id=?");
-        $query->bind_param("ii", $_POST['id_card'], $_POST['ida']);
+        $query=$link->prepare("update activities set  id_card=?, status=? where id=?");
+        $query->bind_param("iii", $_POST['id_card'],$_POST['status'], $_POST['ida']);
         if ($query->execute()) {
             $query->close();
             return $this->json_encode($_POST);

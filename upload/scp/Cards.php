@@ -858,15 +858,28 @@ const creator = <?php echo $creator; ?>;
         })
 
         draggable.addEventListener('dragend', () => {
-            const idc = $(draggable).parent().parent().attr("id");
-            const st = $(draggable).attr('onclick');
+            const d = $(draggable);
+            const idc = d.parent().parent().attr("id");
+            const st = d.attr('onclick');
+            const name=d.parent().attr("name");
+            let status;
+            if (name.match(/(todo)-\w*/))
+                status=0;
+            else if (name.match(/(inprog)-\w*/))
+                status=1;
+            else if (name.match(/(done)-\w*/))
+                status=2;
+            else
+                status=3;
+            
             const ida = st.substring(st.indexOf("(")+1, st.indexOf(','));
             $.ajax({
                 url : "ajax.php/activities/changeCard",
                 type: "post",
                 data: {
                     id_card: idc,
-                    ida: ida
+                    ida: ida,
+                    status: status
                 }
             });
             draggable.classList.remove('dragging')

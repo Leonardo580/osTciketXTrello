@@ -23,7 +23,8 @@ $cards = array();
 while ($row = mysqli_fetch_array($result)) {
     $cards[] = $row;
 }
-$query=$link->prepare("select ticket_id, subject, priority from ost_ticket__cdata o inner join activities a on o.ticket_id != a.id_ticket");
+$query=$link->prepare("select distinct ticket_id, subject, priority from ost_ticket__cdata o
+where (ticket_id not in (select id_ticket from activities where id_ticket is not null))");
 $query->execute();
 $res=$query->get_result();
 $tickets=[];
@@ -41,15 +42,19 @@ mysqli_close($link);
 <h3>Awaiting tickets:</h3>
 <div class="cards">
     <?php foreach($tickets as $t){ ?>
-    <div class="card tick" style="height: 30px;">
-        <header>
-            <?= $t['subject']?>
-        </header>
 
-        <div class="content">
+        <div>
+            <div  class="tt tick" >
+                <header>
+                    <?= $t['subject'] ?>
+                </header>
+
+                <div class="content">
+                    <a href="tickets.php?id=<?= $t['ticket_id'] ?>" style="float: right"></a>
+                </div>
+            </div>
             <a href="tickets.php?id=<?= $t['ticket_id'] ?>" style="float: right">see more</a>
         </div>
-    </div>
     <?php }?>
 </div>
 <hr>
@@ -1127,7 +1132,7 @@ const creator = <?php echo $creator; ?>;
     }
 
     $(document).ready(e => {
-        $(".card.tick").on("click", function (e) {
+        $(".tick").on("click", function (e) {
             e.preventDefault();
             const popup = $("#popup-ticket");
             popup.css("display", "block").css("top", "150px");

@@ -257,6 +257,7 @@ $dispatcher = patterns('',
     url("^edit/(?P<id>\d+)$", "edit"),
     url("^delete/(?P<id>\d+)$", "delete"),
     url("^changeCard", "changeCard")
+    //<<<<<<<<url("^TicketToActivity", "ticketToActivity")
     )),
     //function of members
 url("^/members/", patterns("ajax.members.php:MembersAjaxAPI",

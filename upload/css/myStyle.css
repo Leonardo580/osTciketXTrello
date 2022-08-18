@@ -89,7 +89,7 @@ i:hover {
 }
 
 .todo {
-    background-color: #b09e9c;
+    background-color: #eac1bd;
     padding: 1rem;
     margin-top: 1rem;
 }
@@ -111,4 +111,8 @@ i:hover {
     padding: 1rem;
     margin-top: 1rem;
     color: white;
+}
+
+.tick {
+    cursor: pointer;
 }

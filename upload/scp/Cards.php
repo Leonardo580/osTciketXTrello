@@ -23,6 +23,12 @@ $cards = array();
 while ($row = mysqli_fetch_array($result)) {
     $cards[] = $row;
 }
+$query=$link->prepare("select ticket_id, subject, priority from ost_ticket__cdata o inner join activities a on o.ticket_id != a.id_ticket");
+$query->execute();
+$res=$query->get_result();
+$tickets=[];
+while ($row= $res->fetch_assoc())
+    $tickets[]=$row;
 
 mysqli_close($link);
 
@@ -31,6 +37,21 @@ mysqli_close($link);
 <link rel="stylesheet" href="../css/myStyle.css">
 <a href="ExportRepo.php" class="button action-button"  style="float: right;"><i class="icon-download" ></i> Export</a>
 <h2 style="color: black">Board's Cards: </h2>
+<hr>
+<h3>Awaiting tickets:</h3>
+<div class="cards">
+    <?php foreach($tickets as $t){ ?>
+    <div class="card tick" style="height: 30px;">
+        <header>
+            <?= $t['subject']?>
+        </header>
+
+        <div class="content">
+            <a href="tickets.php?id=<?= $t['ticket_id'] ?>" style="float: right">see more</a>
+        </div>
+    </div>
+    <?php }?>
+</div>
 <hr>
 <!--<div class="row">
     <div class="column">
@@ -237,7 +258,7 @@ where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =
                                     $members[] = $row;
                                 $query->close();
                                 ?>
-                                <select title="assigned to" id="assigned-id" disabled="<?php $creator = $members[0]['creator'];
+                                <select title="assigned to" id="assigned-idd" disabled="<?php $creator = $members[0]['creator'];
                                 echo $thisstaff->getId() == $creator ?>">
 
                                     <?php
@@ -249,6 +270,173 @@ where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =
                                             </option>
                                         <?php } ?>
 
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="required">Expected to be delivered :</td>
+                            <td>
+                                <input type="date" min="<?=  date("Y-m-d"); ?>" >
+                            </td>
+                        </tr>
+
+
+                        </tbody>
+                    </table>
+                    <hr>
+                    <p class="full-width">
+        <span class="buttons pull-left">
+            <input type="reset" value="Reset">
+            <input type="button" name="cancel" class="close" value="Cancel">
+        </span>
+                        <span class="buttons pull-right">
+            <input type="submit" value="Add Activity">
+        </span>
+                    </p>
+                </form>
+            </div>
+            <div class="clear"></div>
+        </div>
+        <script type="text/javascript">
+            $(function () {
+                var last_req;
+                $('#org-search').typeahead({
+                    source: function (typeahead, query) {
+                        if (last_req) last_req.abort();
+                        last_req = $.ajax({
+                            url: "ajax.php/orgs/search?q=" + query,
+                            dataType: 'json',
+                            success: function (data) {
+                                typeahead.process(data);
+                            }
+                        });
+                    },
+                    onselect: function (obj) {
+                        $('#the-lookup-form').load(
+                            'ajax.php/orgs/select/' + encodeURIComponent(obj.id)
+                        );
+                    },
+                    property: "/bin/true"
+                });
+
+                $('a#unselect-org').click(function (e) {
+                    e.preventDefault();
+                    $('div#selected-org-info').hide();
+                    $('div#new-org-form').fadeIn({
+                        start: function () {
+                            $('#org-search').focus();
+                        }
+                    });
+                    return false;
+                });
+
+                $(document).on('click', 'form.org input.cancel', function (e) {
+                    e.preventDefault();
+                    $('div#new-org-form').hide();
+                    $('div#selected-org-info').fadeIn({
+                        start: function () {
+                            $('#org-search').focus();
+                        }
+                    });
+                    return false;
+                });
+            });
+        </script>
+    </div>
+</div>
+<div class="dialog draggable ui-draggable size-normal" id="popup-ticket" style="top: 107.714px; left: 166px; display: none;">
+    <div id="popup-loading" style="display: none;">
+        <h1 style="margin-bottom: 20px; margin-top: 6px;"><i class="icon-spinner icon-spin icon-large"></i>
+            Loading ...</h1>
+    </div>
+    <div class="body">
+        <div id="the-lookup-form">
+            <h3 class="drag-handle">Add New Activity</h3>
+            <b><a class="close" href="#"><i class="icon-remove-circle"></i></a></b>
+            <hr>
+            <div><p id="msg_info"><i class="icon-info-sign"></i>&nbsp; Complete the form below to add a new activity.
+                </p>
+            </div>
+            <div id="selected-org-info" style="display:none;margin:5px;">
+                <form method="post" class="org" action="">
+                    <input type="hidden" id="org-id" name="orgid" value="0">
+                    <i class="icon-group icon-4x pull-left icon-border"></i>
+                    <a class="action-button pull-right" style="overflow:inherit" id="unselect-org" href="#"><i
+                                class="icon-remove"></i>
+                        Add New Activity</a>
+                    <div><strong id="org-name"></strong></div>
+                    <div class="clear"></div>
+                    <hr>
+                    <p class="full-width">
+    <span class="buttons pull-left">
+        <input type="button" name="cancel" class="close" value="Cancel">
+    </span>
+                        <span class="buttons pull-right">
+        <input type="submit" value="Continue">
+    </span>
+                    </p>
+                </form>
+            </div>
+            <div id="new-org-form" style="display:block;">
+                <form method="post" class="" action="" id="add-activity">
+                    <?php
+                    csrf_token();
+                    ?>
+                    <table width="100%" class="fixed">
+                        <tbody>
+                        <tr>
+                            <td style="width:150px;"></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <th colspan="2">
+                                <em>
+                                    <strong>Create New Activity</strong>:
+                                    <div>Details on user activity</div>
+                                </em>
+                            </th>
+                        </tr>
+
+                        <tr>
+                            <td class="multi-line ">Assigned to</td>
+                            <td>
+                                <?php
+                                $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
+                                $query = $link->prepare("select username, staff_id, creator from ost_staff
+inner join members m on ost_staff.staff_id = m.id_user
+inner join repos r on m.id_repo = r.id
+where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =r.id
+                                 where (b.id=?)))");
+                                $query->bind_param("i", $_GET['idb']);
+                                $query->execute();
+                                $mem = $query->get_result();
+                                $members = [];
+                                while ($row = $mem->fetch_array(PDO::FETCH_LAZY))
+                                    $members[] = $row;
+                                $query->close();
+                                ?>
+                                <select title="assigned to" id="assigned-iddd" disabled="<?php $creator = $members[0]['creator'];
+                                echo $thisstaff->getId() == $creator ?>">
+
+                                    <?php
+                                    if ($thisstaff->getId() == $creator)
+                                        for ($i = 0; $i < count($members); $i++) {
+                                            ?>
+                                            <option value="<?php echo $members[$i]['staff_id']; ?>" >
+                                                <?php echo $members[$i]['username']; ?>
+                                            </option>
+                                        <?php } ?>
+
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="required">Card: </td>
+                            <td>
+                                <select title="" id="sl-cards">
+                                    <?php foreach($cards as $c ){?>
+                                        <option value="<?= $c['id'] ?>"> <?= $c['title'] ?></option>
+                                    <?php } ?>
                                 </select>
                             </td>
                         </tr>
@@ -398,7 +586,16 @@ where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =
                                             <option value="<?php echo $members[$i]['staff_id']; ?>">
                                                 <?php echo $members[$i]['username'];?>
                                             </option>
-                                        <?php } ?>
+                                        <?php }
+                                    else {
+                                        for ($i=0; $i<count($members); $i++)
+                                            if ($members[$i]["staff_id"]==$thisstaff->getId()){ ?>
+                                                <option value="<?php echo $members[$i]['staff_id']; ?>">
+                                                <?php echo $members[$i]['username'];?>
+                                            </option>
+                                    <?php
+                                            }
+                                    }?>
 
                                 </select>
                             </td>
@@ -790,6 +987,7 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
     }
 const creator = <?php echo $creator; ?>;
     function openActivity(id, element, assignedTo, idc) {
+        console.log(idc, id_user, creator);
         if (id_user==idc || id_user==creator) {
             const popup = $("#popup-edit");
             popup.css("display", "block").css("top", "120px");
@@ -797,7 +995,10 @@ const creator = <?php echo $creator; ?>;
             const p = $(element).children("p").text();
             const form = popup.find("form");
             $("#assigned-id").children("option[value='" + assignedTo + "']")
-
+            const dt=$(element).children("div").text();
+            form.find("input[type='date']").val(dt);
+            const st=getStatus($(element))
+            $("#sl-status").val(st);
             $("#cnt").text(p);
             $("#delete-activity").on("click", function (e) {
                 e.preventDefault();
@@ -823,7 +1024,7 @@ const creator = <?php echo $creator; ?>;
                 let status = $("#sl-status").val();
                 const assignedto = $("#assigned-id").val();
                 const expected = $(this).find("input[type='date']").val();
-                console.log(assignedto);
+                console.log($("#assigned-id option:selected").val());
                 $.ajax({
                         url: "ajax.php/activities/edit/" + id,
                         type: 'POST',
@@ -852,6 +1053,19 @@ const creator = <?php echo $creator; ?>;
     const draggables = document.querySelectorAll('.drag')
     const containers = document.querySelectorAll('.cont')
 
+    const getStatus= (d) => {
+        const name=d.parent().attr("name");
+        let status;
+        if (name.match(/(todo)-\w*/))
+            status=0;
+        else if (name.match(/(inprog)-\w*/))
+            status=1;
+        else if (name.match(/(done)-\w*/))
+            status=2;
+        else
+            status=3;
+        return status;
+    }
     draggables.forEach(draggable => {
         draggable.addEventListener('dragstart', () => {
             draggable.classList.add('dragging')
@@ -861,17 +1075,13 @@ const creator = <?php echo $creator; ?>;
             const d = $(draggable);
             const idc = d.parent().parent().attr("id");
             const st = d.attr('onclick');
-            const name=d.parent().attr("name");
-            let status;
-            if (name.match(/(todo)-\w*/))
-                status=0;
-            else if (name.match(/(inprog)-\w*/))
-                status=1;
-            else if (name.match(/(done)-\w*/))
-                status=2;
-            else
-                status=3;
-            
+            const status=getStatus(d);
+            const cl={
+                0: "todo",
+                1: "in-progress",
+                2: "done",
+                3: "overdue"
+            }
             const ida = st.substring(st.indexOf("(")+1, st.indexOf(','));
             $.ajax({
                 url : "ajax.php/activities/changeCard",
@@ -883,6 +1093,9 @@ const creator = <?php echo $creator; ?>;
                 }
             });
             draggable.classList.remove('dragging')
+            draggable.classList.remove("todo", "in-progress", "done", "overdue")
+            draggable.classList.add(cl[status])
+
         })
     })
 
@@ -913,6 +1126,50 @@ const creator = <?php echo $creator; ?>;
         }, { offset: Number.NEGATIVE_INFINITY }).element
     }
 
+    $(document).ready(e => {
+        $(".card.tick").on("click", function (e) {
+            e.preventDefault();
+            const popup = $("#popup-ticket");
+            popup.css("display", "block").css("top", "150px");
+            const form=popup.find("form")
+            const div = $(this);
+            const content= div.find('header').text().trim();
+            const ticket_id= div.find("a").attr("href").match(/\d+/)[0];
+            form.on("submit", e => {
+                e.preventDefault();
+                const assignedto=$("#assigned-iddd").val();
+                const card=$("#sl-cards option:selected").val();
+                const expected=form.find("input[type='date']").val();
+
+                console.log({
+                    card:card,
+                    content: content,
+                    assignedto: assignedto,
+                    expected: expected,
+                    id_user: id_user,
+                    ticket_id: ticket_id
+                })
+                $.ajax({
+                    url: "ajax.php/activities/add/"+ card,
+                    type: "post",
+                    data: {
+                        content: content,
+                        assignedTo: assignedto,
+                        expected: expected,
+                        id_user: id_user,
+                        ticket_id: ticket_id
+                    },
+                    success: data => {
+                        popup.css("display","none");
+                        location.reload();
+                    },
+                    error: err => console.log(err)
+                });
+
+
+            })
+        })
+    })
 
 
 </script>

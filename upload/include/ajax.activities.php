@@ -5,15 +5,15 @@ class ActivitiesAjaxAPI extends AjaxController{
     {
 
         $link=mysqli_connect("localhost", "anas", "22173515", "osticket");
-        $query =$link->prepare("insert into activities (id_card, content, status, id_user, assignedTo, expected) values (?,?,?,?,?,?);");
+        $query =$link->prepare("insert into activities (id_card, content, status, id_user, assignedTo, expected, id_ticket) values (?,?,?,?,?,?,?);");
         $status=0;
         $id_user=intval($_POST['id_user']);
-        $query->bind_param("isiiis",$idc, $_POST["content"], $status, $id_user, $_POST['assignedTo']
-            ,  $_POST['expected']);
+        $query->bind_param("isiiisi",$idc, $_POST["content"], $status, $id_user, $_POST['assignedTo']
+            ,  $_POST['expected'], $_POST['ticket_id']);
         $query->execute();
         mysqli_close($link);
 
-        return $this->json_encode("cannot add an activity");
+        return $this->json_encode("success");
 
     }
     public function delete($id){
@@ -29,7 +29,7 @@ class ActivitiesAjaxAPI extends AjaxController{
         $content = $_POST['content'];
         $status = $_POST['status'];
         $query= $link->prepare("update activities set content=?, status=? , id_user=? , assignedTo=?, expected=? where id=?");
-        $id_user=1;
+        $id_user=$_POST['id_user'];
         $query->bind_param("siiisi", $content, $status, $id_user,$_POST['assignedTo'],$_POST['expected'], $id );
         $query->execute();
 
@@ -61,5 +61,6 @@ class ActivitiesAjaxAPI extends AjaxController{
         $query->close();
         return $this->json_encode("unknown error");
     }
+
 
 }

@@ -1,30 +1,34 @@
 <?php
 /*************************************************************************
-    class.export.php
+ * class.export.php
+ *
+ * Exports stuff (details to follow)
+ *
+ * Jared Hancock <jared@osticket.com>
+ * Copyright (c)  2006-2013 osTicket
+ * http://www.osticket.com
+ *
+ * Released under the GNU General Public License WITHOUT ANY WARRANTY.
+ * See LICENSE.TXT for details.
+ *
+ * vim: expandtab sw=4 ts=4 sts=4:
+ **********************************************************************/
 
-    Exports stuff (details to follow)
-
-    Jared Hancock <jared@osticket.com>
-    Copyright (c)  2006-2013 osTicket
-    http://www.osticket.com
-
-    Released under the GNU General Public License WITHOUT ANY WARRANTY.
-    See LICENSE.TXT for details.
-
-    vim: expandtab sw=4 ts=4 sts=4:
-**********************************************************************/
-
-class Export {
+class Export
+{
 
     // XXX: This may need to be moved to a print-specific class
     static $paper_sizes = array(
-        /* @trans */ 'Letter',
-        /* @trans */ 'Legal',
+        /* @trans */
+        'Letter',
+        /* @trans */
+        'Legal',
         'A4',
         'A3',
     );
 
-    static function dumpQuery($sql, $headers, $how='csv', $options=array()) {
+    static function dumpQuery($sql, $headers, $how = 'csv', $options = array())
+    {
         $exporters = array(
             'csv' => 'CsvResultsExporter',
             'json' => 'JsonResultsExporter'
@@ -40,8 +44,9 @@ class Export {
     #      SQL is exported, but for something like tickets, we will need to
     #      export attached messages, reponses, and notes, as well as
     #      attachments associated with each, ...
-    static function dumpTickets($sql, $target=array(), $how='csv',
-            $options=array()) {
+    static function dumpTickets($sql, $target = array(), $how = 'csv',
+                                $options = array())
+    {
         // Add custom fields to the $sql statement
         $cdata = $fields = array();
         foreach (TicketForm::getInstance()->getFields() as $f) {
@@ -52,14 +57,14 @@ class Export {
             elseif (!$f->hasData() || $f->isPresentationOnly())
                 continue;
 
-            $name = $f->get('name') ?: 'field_'.$f->get('id');
-            $key = 'cdata.'.$name;
+            $name = $f->get('name') ?: 'field_' . $f->get('id');
+            $key = 'cdata.' . $name;
             $fields[$key] = $f;
             $cdata[$key] = $f->getLocal('label');
         }
 
         if (!is_array($target))
-          $target = CustomQueue::getExportableFields() + $cdata;
+            $target = CustomQueue::getExportableFields() + $cdata;
 
         // Reset the $sql query
         $tickets = $sql->models()
@@ -91,33 +96,35 @@ class Export {
         return self::dumpQuery($tickets,
             $target,
             $how,
-            array('modify' => function(&$record, $keys) use ($fields) {
-                foreach ($fields as $k=>$f) {
+            array('modify' => function (&$record, $keys) use ($fields) {
+                foreach ($fields as $k => $f) {
                     if (($i = array_search($k, $keys)) !== false) {
                         $record[$i] = $f->export($f->to_php($record[$i]));
                     }
                 }
                 return $record;
             },
-            'delimiter' => @$options['delimiter'])
-            );
+                'delimiter' => @$options['delimiter'])
+        );
     }
 
-    static  function saveTickets($sql, $fields, $filename, $how='csv',
-            $options=array()) {
-       global $thisstaff;
+    static function saveTickets($sql, $fields, $filename, $how = 'csv',
+                                $options = array())
+    {
+        global $thisstaff;
 
-       if (!$thisstaff)
-               return null;
+        if (!$thisstaff)
+            return null;
 
-       $sql->filter($thisstaff->getTicketsVisibility());
+        $sql->filter($thisstaff->getTicketsVisibility());
         Http::download($filename, "text/$how");
         self::dumpTickets($sql, $fields, $how, $options);
         exit;
     }
 
 
-    static function dumpTasks($sql, $how='csv') {
+    static function dumpTasks($sql, $how = 'csv')
+    {
         // Add custom fields to the $sql statement
         $cdata = $fields = array();
         foreach (TaskForm::getInstance()->getFields() as $f) {
@@ -125,8 +132,8 @@ class Export {
             if (!$f->hasData() || $f->isPresentationOnly())
                 continue;
 
-            $name = $f->get('name') ?: 'field_'.$f->get('id');
-            $key = 'cdata.'.$name;
+            $name = $f->get('name') ?: 'field_' . $f->get('id');
+            $key = 'cdata.' . $name;
             $fields[$key] = $f;
             $cdata[$key] = $f->getLocal('label');
         }
@@ -134,77 +141,76 @@ class Export {
         $tasks = $sql->models()
             ->select_related('dept', 'staff', 'team', 'cdata')
             ->annotate(array(
-            'collab_count' => SqlAggregate::COUNT('thread__collaborators'),
-            'attachment_count' => SqlAggregate::COUNT('thread__entries__attachments'),
-            'thread_count' => SqlAggregate::COUNT('thread__entries'),
-        ));
+                'collab_count' => SqlAggregate::COUNT('thread__collaborators'),
+                'attachment_count' => SqlAggregate::COUNT('thread__entries__attachments'),
+                'thread_count' => SqlAggregate::COUNT('thread__entries'),
+            ));
 
         return self::dumpQuery($tasks,
             array(
-                'number' =>         __('Task Number'),
-                'created' =>        __('Date Created'),
-                'cdata.title' =>    __('Title'),
+                'number' => __('Task Number'),
+                'created' => __('Date Created'),
+                'cdata.title' => __('Title'),
                 'dept::getLocalName' => __('Department'),
-                '::getStatus' =>    __('Current Status'),
-                'duedate' =>        __('Due Date'),
+                '::getStatus' => __('Current Status'),
+                'duedate' => __('Due Date'),
                 'staff::getName' => __('Agent Assigned'),
-                'team::getName' =>  __('Team Assigned'),
-                'thread_count' =>   __('Thread Count'),
+                'team::getName' => __('Team Assigned'),
+                'thread_count' => __('Thread Count'),
                 'attachment_count' => __('Attachment Count'),
             ) + $cdata,
             $how,
-            array('modify' => function(&$record, $keys, $obj) use ($fields) {
-                foreach ($fields as $k=>$f) {
+            array('modify' => function (&$record, $keys, $obj) use ($fields) {
+                foreach ($fields as $k => $f) {
                     if (($i = array_search($k, $keys)) !== false) {
                         $record[$i] = $f->export($f->to_php($record[$i]));
                     }
                 }
                 return $record;
             })
-            );
+        );
     }
 
-    static function dumpCards(){
+    static function dumpCards()
+    {
 
 
-        $fileds=["ID", "Card", "user","content",  "status", "assigned to"];
-        $excelData=implode("\t", array_values($fileds))."\n";
+        $fileds = ["ID", "Card", "user", "content", "status", "assigned to"];
+        $excelData = implode("\t", array_values($fileds)) . "\n";
 
-        $link=mysqli_connect("localhost","anas", "22173515", "osticket");
-        $res=mysqli_query($link, "select a.id, c.title, o.username as  'us', content, status, os.username as 'uss' from activities a
+        $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
+        $res = mysqli_query($link, "select a.id, c.title, o.username as  'us', content, status, os.username as 'uss' from activities a
                                 inner join cards c on a.id_card = c.id
                                 inner join ost_staff o on staff_id=id_user
 inner join ost_staff os on os.staff_id=assignedTo;");
-        $status=[0 => "To Do", 1 => "In Progress", 2 => "Done", 3 => "Overdue"];
-        if ($res->num_rows>0){
-            while($row = mysqli_fetch_array($res)){
-                $linedata=[$row['id'], $row['title'], $row['us'], $row['content'], $status[$row["status"]], $row["uss"]];
+        $status = [0 => "To Do", 1 => "In Progress", 2 => "Done", 3 => "Overdue"];
+        if ($res->num_rows > 0) {
+            while ($row = mysqli_fetch_array($res)) {
+                $linedata = [$row['id'], $row['title'], $row['us'], $row['content'], $status[$row["status"]], $row["uss"]];
                 array_walk($linedata, "filterData");
-                $excelData.=implode("\t", array_values($linedata))."\n";
+                $excelData .= implode("\t", array_values($linedata)) . "\n";
             }
+        } else {
+            $excelData .= "No records were found" . "\n";
         }
-        else{
-            $excelData.="No records were found"."\n";
-        }
-    return $excelData;
+        return $excelData;
     }
-static function saveCards() : bool{
-    $filename="activities-data_".date("Y-m-d").".xls";
 
-    /*ob_start();
-    self::dumpCards();
-        $cards=ob_get_contents();
+    static function saveCards()
+    {
+        $filename = "activities-data_" . date("Y-m-d") . ".xls";
+        ob_start();
+        self::dumpCards();
+        $cards = ob_get_contents();
         ob_end_clean();
-        //if ($cards)
-        Http::download($filename, "text/csv",$cards);
-        return false;*/
-    $export=new CsvExporter();
-    $export->init();
-    $export->write(self::dumpQuery())
-    return false;
-}
+        if ($cards)
+            Http::download($filename, "text/csv", $cards);
+        return false;
 
-    static function saveTasks($sql, $filename, $how='csv') {
+    }
+
+    static function saveTasks($sql, $filename, $how = 'csv')
+    {
 
         ob_start();
         self::dumpTasks($sql, $how);
@@ -215,39 +221,43 @@ static function saveCards() : bool{
 
         return false;
     }
+
     //new methods
 
 
-    static function saveUsers($sql, $filename, $how='csv') {
+    static function saveUsers($sql, $filename, $how = 'csv')
+    {
 
         $exclude = array('name', 'email');
         $form = UserForm::getUserForm();
         $fields = $form->getExportableFields($exclude, 'cdata.');
 
         $cdata = array_combine(array_keys($fields),
-                array_values(array_map(
-                        function ($f) { return $f->getLocal('label'); }, $fields)));
+            array_values(array_map(
+                function ($f) {
+                    return $f->getLocal('label');
+                }, $fields)));
 
         $users = $sql->models()
             ->select_related('org', 'cdata');
 
         ob_start();
         echo self::dumpQuery($users,
-                array(
-                    'name'  =>          __('Name'),
-                    'org' =>   __('Organization'),
-                    '::getEmail' =>          __('Email'),
-                    ) + $cdata,
-                $how,
-                array('modify' => function(&$record, $keys, $obj) use ($fields) {
-                    foreach ($fields as $k=>$f) {
-                        if ($f && ($i = array_search($k, $keys)) !== false) {
-                            $record[$i] = $f->export($f->to_php($record[$i]));
-                        }
+            array(
+                'name' => __('Name'),
+                'org' => __('Organization'),
+                '::getEmail' => __('Email'),
+            ) + $cdata,
+            $how,
+            array('modify' => function (&$record, $keys, $obj) use ($fields) {
+                foreach ($fields as $k => $f) {
+                    if ($f && ($i = array_search($k, $keys)) !== false) {
+                        $record[$i] = $f->export($f->to_php($record[$i]));
                     }
-                    return $record;
-                    })
-                );
+                }
+                return $record;
+            })
+        );
         $stuff = ob_get_contents();
         ob_end_clean();
 
@@ -257,36 +267,39 @@ static function saveCards() : bool{
         return false;
     }
 
-    static function saveOrganizations($sql, $filename, $how='csv') {
+    static function saveOrganizations($sql, $filename, $how = 'csv')
+    {
 
         $exclude = array('name');
         $form = OrganizationForm::getDefaultForm();
         $fields = $form->getExportableFields($exclude, 'cdata.');
         $cdata = array_combine(array_keys($fields),
-                array_values(array_map(
-                        function ($f) { return $f->getLocal('label'); }, $fields)));
+            array_values(array_map(
+                function ($f) {
+                    return $f->getLocal('label');
+                }, $fields)));
 
         $cdata += array(
-                '::getNumUsers' => 'Users',
-                '::getAccountManager' => 'Account Manager',
-                );
+            '::getNumUsers' => 'Users',
+            '::getAccountManager' => 'Account Manager',
+        );
 
         $orgs = $sql->models();
         ob_start();
         echo self::dumpQuery($orgs,
-                array(
-                    'name'  =>  'Name',
-                    ) + $cdata,
-                $how,
-                array('modify' => function(&$record, $keys, $obj) use ($fields) {
-                    foreach ($fields as $k=>$f) {
-                        if ($f && ($i = array_search($k, $keys)) !== false) {
-                            $record[$i] = $f->export($f->to_php($record[$i]));
-                        }
+            array(
+                'name' => 'Name',
+            ) + $cdata,
+            $how,
+            array('modify' => function (&$record, $keys, $obj) use ($fields) {
+                foreach ($fields as $k => $f) {
+                    if ($f && ($i = array_search($k, $keys)) !== false) {
+                        $record[$i] = $f->export($f->to_php($record[$i]));
                     }
-                    return $record;
-                    })
-                );
+                }
+                return $record;
+            })
+        );
         $stuff = ob_get_contents();
         ob_end_clean();
 
@@ -296,114 +309,117 @@ static function saveCards() : bool{
         return false;
     }
 
-    static function agents($agents, $filename='', $how='csv') {
+    static function agents($agents, $filename = '', $how = 'csv')
+    {
 
         // Filename or stream to export agents to
         $filename = $filename ?: sprintf('Agents-%s.csv',
-                strftime('%Y%m%d'));
+            strftime('%Y%m%d'));
         Http::download($filename, "text/$how");
         $depts = Dept::getDepartments(null, true, Dept::DISPLAY_DISABLED);
         echo self::dumpQuery($agents, array(
-                    '::getName'  =>  'Name',
-                    '::getUsername' => 'Username',
-                    '::getStatus' => 'Status',
-                    'permissions' => 'Permissions',
-                    '::getDept'  => 'Primary Department',
-                    ) + $depts,
-                $how,
-                array('modify' => function(&$record, $keys, $obj) use ($depts) {
+                '::getName' => 'Name',
+                '::getUsername' => 'Username',
+                '::getStatus' => 'Status',
+                'permissions' => 'Permissions',
+                '::getDept' => 'Primary Department',
+            ) + $depts,
+            $how,
+            array('modify' => function (&$record, $keys, $obj) use ($depts) {
 
-                   if (($i = array_search('permissions', $keys)))
-                       $record[$i] = implode(",", array_keys($obj->getPermission()->getInfo()));
+                if (($i = array_search('permissions', $keys)))
+                    $record[$i] = implode(",", array_keys($obj->getPermission()->getInfo()));
 
-                    $roles = $obj->getRoles();
-                    foreach ($depts as $k => $v) {
-                        if (is_numeric($k) && ($i = array_search($k, $keys)) !== false) {
-                            $record[$i] = $roles[$k] ?: '';
-                        }
+                $roles = $obj->getRoles();
+                foreach ($depts as $k => $v) {
+                    if (is_numeric($k) && ($i = array_search($k, $keys)) !== false) {
+                        $record[$i] = $roles[$k] ?: '';
                     }
-                    return $record;
-                    })
-                );
+                }
+                return $record;
+            })
+        );
         exit;
 
     }
 
-static function departmentMembers($dept, $agents, $filename='', $how='csv') {
-    $primaryMembers = array();
-    foreach ($dept->getPrimaryMembers() as $agent) {
-      $primaryMembers[] = $agent->getId();
-    }
+    static function departmentMembers($dept, $agents, $filename = '', $how = 'csv')
+    {
+        $primaryMembers = array();
+        foreach ($dept->getPrimaryMembers() as $agent) {
+            $primaryMembers[] = $agent->getId();
+        }
 
-    // Filename or stream to export depts' agents to
-    $filename = $filename ?: sprintf('%s-%s.csv', $dept->getName(),
+        // Filename or stream to export depts' agents to
+        $filename = $filename ?: sprintf('%s-%s.csv', $dept->getName(),
             strftime('%Y%m%d'));
-    Http::download($filename, "text/$how");
-    echo self::dumpQuery($agents, array(
-                '::getName'  =>  'Name',
-                '::getUsername' => 'Username',
-                2 => 'Access Type',
-                3 => 'Access Role',
-              ),
+        Http::download($filename, "text/$how");
+        echo self::dumpQuery($agents, array(
+            '::getName' => 'Name',
+            '::getUsername' => 'Username',
+            2 => 'Access Type',
+            3 => 'Access Role',
+        ),
             $how,
-            array('modify' => function(&$record, $keys, $obj) use ($dept, $primaries, $primaryMembers) {
+            array('modify' => function (&$record, $keys, $obj) use ($dept, $primaries, $primaryMembers) {
                 $role = $obj->getRole($dept);
 
                 if (array_search($obj->getId(), $primaryMembers, true) === false)
-                  $type = 'Extended';
+                    $type = 'Extended';
                 else {
-                  $type = 'Primary';
+                    $type = 'Primary';
                 }
 
                 $record[2] = $type;
                 $record[3] = $role->name;
                 return $record;
-                })
-            );
-    exit;
-  }
+            })
+        );
+        exit;
+    }
 
-  static function audits($type, ?string $filename=null, ?string $tableInfo=null, ?string $object=null, ?string $how='csv', ?bool $show_viewed=true, ?array $data=array(), CsvExporter $exporter) {
-      $headings = array('Description', 'Timestamp', 'IP');
-      switch ($type) {
-          case 'audit':
-              $sql = AuditEntry::objects()->filter(array('object_type'=>$data['type']));
-              if ($data['state'] && $data['state'] != 'All') {
-                  $eventId = Event::getIdByName(strtolower($data['state']));
-                  $sql = $sql->filter(array('event_id'=>$eventId));
-              }
-              if ($data['startDate'] && $data['endDate'])
-                  $sql = $sql->filter(array('timestamp__range' =>
-                                      array('"'.$data['startDate'].'"', '"'.$data['endDate'].'"', true)));
+    static function audits($type, ?string $filename = null, ?string $tableInfo = null, ?string $object = null, ?string $how = 'csv', ?bool $show_viewed = true, ?array $data = array(), CsvExporter $exporter)
+    {
+        $headings = array('Description', 'Timestamp', 'IP');
+        switch ($type) {
+            case 'audit':
+                $sql = AuditEntry::objects()->filter(array('object_type' => $data['type']));
+                if ($data['state'] && $data['state'] != 'All') {
+                    $eventId = Event::getIdByName(strtolower($data['state']));
+                    $sql = $sql->filter(array('event_id' => $eventId));
+                }
+                if ($data['startDate'] && $data['endDate'])
+                    $sql = $sql->filter(array('timestamp__range' =>
+                        array('"' . $data['startDate'] . '"', '"' . $data['endDate'] . '"', true)));
 
-              $sql = $sql->order_by('-timestamp');
-              $tableInfo = $sql;
-              break;
-          case 'user':
-              $sql = AuditEntry::objects()->filter(array('user_id'=>$object))->order_by('-timestamp');
-              break;
-          case 'staff':
-              $sql = AuditEntry::objects()->filter(array('staff_id'=>$object))->order_by('-timestamp');
-              break;
-          case 'ticket':
-              $sql = AuditEntry::objects()->filter(array('object_id'=>$object, 'object_type'=>'T'))->order_by('-timestamp');
-              break;
-      }
-      if (!$show_viewed)
-          $sql = $sql->filter(Q::not(array('event_id'=>Event::getIdByName('viewed'))))->order_by('-timestamp');
-
-      $exporter->write($headings);
-      $row = array();
-      foreach ($sql as $key => $value) {
-        if (is_object($value)) {
-            $description = AuditEntry::getDescription($value, true);
-            $value = $value->ht;
+                $sql = $sql->order_by('-timestamp');
+                $tableInfo = $sql;
+                break;
+            case 'user':
+                $sql = AuditEntry::objects()->filter(array('user_id' => $object))->order_by('-timestamp');
+                break;
+            case 'staff':
+                $sql = AuditEntry::objects()->filter(array('staff_id' => $object))->order_by('-timestamp');
+                break;
+            case 'ticket':
+                $sql = AuditEntry::objects()->filter(array('object_id' => $object, 'object_type' => 'T'))->order_by('-timestamp');
+                break;
         }
-        $row[0] = $description;
-        $row[1] = Format::datetime($value['timestamp']);
-        $row[2] = $value['ip'];
-        $exporter->write($row);
-      }
+        if (!$show_viewed)
+            $sql = $sql->filter(Q::not(array('event_id' => Event::getIdByName('viewed'))))->order_by('-timestamp');
+
+        $exporter->write($headings);
+        $row = array();
+        foreach ($sql as $key => $value) {
+            if (is_object($value)) {
+                $description = AuditEntry::getDescription($value, true);
+                $value = $value->ht;
+            }
+            $row[0] = $description;
+            $row[1] = Format::datetime($value['timestamp']);
+            $row[2] = $value['ip'];
+            $exporter->write($row);
+        }
     }
 }
 
@@ -412,7 +428,9 @@ static function departmentMembers($dept, $agents, $filename='', $how='csv') {
  * Exporter Interface
  *
  */
-abstract class  Exporter {
+
+abstract class  Exporter
+{
 
     protected $id;   // Export ID (random code)
     protected $fp;   // stream: file pointer for $file
@@ -423,9 +441,11 @@ abstract class  Exporter {
     protected $options;
 
     abstract function write($data);
+
     abstract function init();
 
-    function __construct($options=array()) {
+    function __construct($options = array())
+    {
         $this->id = $options['id'] ?: self::generateId();
         if (isset($options['file']))
             $this->file = $options['file'];
@@ -433,35 +453,38 @@ abstract class  Exporter {
         $this->open();
     }
 
-    function isAvailable() {
+    function isAvailable()
+    {
         return file_exists($this->getFile());
     }
 
-    function isReady() {
+    function isReady()
+    {
         return ($this->isAvailable() && $this->lock());
     }
 
-    private function open($mode='a+') {
+    private function open($mode = 'a+')
+    {
         if ($this->fp)
             return $this->fp;
 
         try {
-            if (($file=$this->getFile())) {
-                if (!($this->fp=fopen($file, $mode)))
+            if (($file = $this->getFile())) {
+                if (!($this->fp = fopen($file, $mode)))
                     throw new Exception();
             } else {
                 // We don't have a file create one in temp directory
                 $prefix = Format::filename(Misc::randCode(6));
-                if (!($temp=tempnam(sys_get_temp_dir(), $prefix))
-                        || !($this->fp=fopen($temp, $mode))
-                        || !($meta=stream_get_meta_data($this->fp))) {
+                if (!($temp = tempnam(sys_get_temp_dir(), $prefix))
+                    || !($this->fp = fopen($temp, $mode))
+                    || !($meta = stream_get_meta_data($this->fp))) {
                     throw new Exception();
                 }
                 // get filename from mera
                 $this->file = $meta['uri'];
                 $this->init();
             }
-        } catch(Exception $ex) {
+        } catch (Exception $ex) {
             @fclose($this->fp);
             @unlink($temp);
             throw new Exception();
@@ -471,39 +494,48 @@ abstract class  Exporter {
     }
 
     // Close / unlock the file.
-    function close() {
+    function close()
+    {
         @fclose($this->fp);
     }
 
-    function delete() {
+    function delete()
+    {
         @unlink($this->getFile());
     }
 
-    function getId() {
+    function getId()
+    {
         return $this->id;
     }
 
-    function getStream() {
+    function getStream()
+    {
         return $this->fp;
     }
 
-    function getFile() {
+    function getFile()
+    {
         return $this->file;
     }
 
-    function getFilename() {
+    function getFilename()
+    {
         return $this->options['filename'] ?: 'Export';
     }
 
-    function getFileType() {
+    function getFileType()
+    {
         return mime_content_type($this->getFile());
     }
 
-    function getFileSize() {
+    function getFileSize()
+    {
         return filesize($this->getFile());
     }
 
-    function getFileObject() {
+    function getFileObject()
+    {
         if (!isset($this->fileObj)) {
             $this->fileObj = new FileObject($this->getFile());
             // Set the real filename
@@ -515,20 +547,24 @@ abstract class  Exporter {
         return $this->fileObj;
     }
 
-    function getOptions() {
+    function getOptions()
+    {
         return $this->options;
     }
 
     // Check interval in seconds
-    function getInterval() {
+    function getInterval()
+    {
         return @$this->options['interval'] ?: 5;
     }
 
-    function lock() {
+    function lock()
+    {
         return $this->fp ? flock($this->fp, LOCK_EX | LOCK_NB) : false;
     }
 
-    function unlock() {
+    function unlock()
+    {
         fflush($this->fp);
         flock($this->fp, LOCK_UN);
     }
@@ -536,12 +572,13 @@ abstract class  Exporter {
     // Acknowledge the export and close the session
     // This is important when the export would be taking a long time or when
     // it's being emailed out in the background
-    function ack() {
+    function ack()
+    {
         // Register the export in the session
         self::register($this);
         // Flush response / return export id and check interval
         Http::flush(201, json_encode(['eid' =>
-                    $this->getId(), 'interval' => $this->getInterval()]));
+            $this->getId(), 'interval' => $this->getInterval()]));
         // Phew... now we're free to do the export
         session_write_close(); // Release session for other requests
         ignore_user_abort(1);  // Leave us alone bro!
@@ -550,30 +587,33 @@ abstract class  Exporter {
     }
 
     // Finilize the export - unlock the file and close the ponter
-    function finalize($delay=true) {
+    function finalize($delay = true)
+    {
         $this->unlock();
         $this->close();
         // Sleep 3 times the interval to allow time for file download
-        if ($delay) sleep($this->getInterval()*3);
+        if ($delay) sleep($this->getInterval() * 3);
     }
 
-    function download($filename=false, $delete=true) {
+    function download($filename = false, $delete = true)
+    {
         $this->close();
         $filename = $filename ?: $this->getFilename();
         Http::download($filename, 'application/octet-stream', null, 'attachment');
-        header('Content-Length: '.$this->getFileSize());
+        header('Content-Length: ' . $this->getFileSize());
         readfile($this->getFile());
         //  Delete the file if requsted
         if ($delete) @$this->delete();
         exit;
     }
 
-    function email(Staff $staff) {
+    function email(Staff $staff)
+    {
         global $cfg;
 
         if (!file_exists($this->getFile())
-                || !($file=$this->getFileObject())
-                || !($email=$cfg->getDefaultEmail()))
+            || !($file = $this->getFileObject())
+            || !($email = $cfg->getDefaultEmail()))
             return false;
 
         $mailer = new Mailer($email);
@@ -584,27 +624,30 @@ abstract class  Exporter {
     }
 
     // Generate an alphanumeric url safe id/code
-    static function generateId($len=6) {
+    static function generateId($len = 6)
+    {
         $id = substr(str_replace('%', '', urlencode(Misc::randCode($len))),
-                0, $len);
+            0, $len);
         if (isset($_SESSION['Exports'][$id]))
             return self::generateId($len);
 
         return $id;
     }
 
-    static function register($exporter, $extra=array()) {
+    static function register($exporter, $extra = array())
+    {
         if (!$exporter instanceof Exporter)
             return false;
 
         $_SESSION['Exports'][$exporter->getId()] = $exporter->getOptions() + array(
-                 'file' => $exporter->getFile(),
-                 'class' => get_class($exporter)) + $extra ?: $extra;
+            'file' => $exporter->getFile(),
+            'class' => get_class($exporter)) + $extra ?: $extra;
     }
 
-    static function load($id) {
+    static function load($id)
+    {
         if (!isset($_SESSION['Exports'][$id])
-                || !file_exists($_SESSION['Exports'][$id]['file']))
+            || !file_exists($_SESSION['Exports'][$id]['file']))
             return null;
 
         try {
@@ -622,10 +665,13 @@ abstract class  Exporter {
 /*
  * CsvExporter - expects an open file
  */
-class CsvExporter extends Exporter {
+
+class CsvExporter extends Exporter
+{
     protected $mimetype = 'text/csv';
 
-    function __construct($options=array()) {
+    function __construct($options = array())
+    {
         try {
             parent::__construct($options);
         } catch (Exception $ex) {
@@ -633,34 +679,39 @@ class CsvExporter extends Exporter {
         }
     }
 
-    function init() {
+    function init()
+    {
         $this->lock();
         // Output a UTF-8 BOM (byte order mark)
         fputs($this->fp, chr(0xEF) . chr(0xBB) . chr(0xBF));
     }
 
-    function getFileType() {
+    function getFileType()
+    {
         return $this->mimetype;
     }
 
-    function getDelimiter() {
+    function getDelimiter()
+    {
         if (isset($this->options['delimiter'])
-                && $this->options['delimiter'])
+            && $this->options['delimiter'])
             return $this->options['delimiter'];
         return Internationalization::getCSVDelimiter();
     }
 
-    function escape($data) {
+    function escape($data)
+    {
         return $data;
         // Escape formula, commands etc.
-        return array_map(function($v) {
-                if (preg_match('/^[=\-+@].*/', $v))
-                    return "'".$v;
-                return $v;
-                }, $data);
+        return array_map(function ($v) {
+            if (preg_match('/^[=\-+@].*/', $v))
+                return "'" . $v;
+            return $v;
+        }, $data);
     }
 
-    function write($data) {
+    function write($data)
+    {
         fputcsv($this->fp, $this->escape($data), $this->getDelimiter());
     }
 
@@ -669,10 +720,13 @@ class CsvExporter extends Exporter {
 /*
  * Given SQL query export results based on subclass.
  */
-class ResultSetExporter {
+
+class ResultSetExporter
+{
     var $output;
 
-    function __construct($sql, $headers, $options=array()) {
+    function __construct($sql, $headers, $options = array())
+    {
         $this->headers = array_values($headers);
         // Remove limit and offset
         $sql->limit(null)->offset(null);
@@ -682,7 +736,7 @@ class ResultSetExporter {
 
         $this->headers = array();
         $this->keys = array();
-        foreach ($headers as $field=>$name) {
+        foreach ($headers as $field => $name) {
             $this->headers[] = $name;
             $this->keys[] = $field;
         }
@@ -692,11 +746,13 @@ class ResultSetExporter {
         $this->_res->rewind();
     }
 
-    function getHeaders() {
+    function getHeaders()
+    {
         return $this->headers;
     }
 
-    function next() {
+    function next()
+    {
         if (!$this->_res->valid())
             return false;
 
@@ -714,7 +770,7 @@ class ResultSetExporter {
                 foreach ($path as $P) {
                     if (isset($current->{$P}))
                         $current = $current->{$P};
-                    else  {
+                    else {
                         $current = $P;
                         break;
                     }
@@ -725,7 +781,7 @@ class ResultSetExporter {
                 $current = $current->{$func}();
             }
 
-            $record[] = (string) $current;
+            $record[] = (string)$current;
         }
 
         if (isset($this->options['modify']) && is_callable($this->options['modify']))
@@ -734,24 +790,28 @@ class ResultSetExporter {
         return $record;
     }
 
-    function nextArray() {
+    function nextArray()
+    {
         if (!($row = $this->next()))
             return false;
         return array_combine($this->keys, $row);
     }
 
-    function dump() {
+    function dump()
+    {
         # Useful for debug output
-        while ($row=$this->nextArray()) {
+        while ($row = $this->nextArray()) {
             var_dump($row); //nolint
         }
     }
 }
 
-class CsvResultsExporter extends ResultSetExporter {
+class CsvResultsExporter extends ResultSetExporter
+{
 
 
-    function getDelimiter() {
+    function getDelimiter()
+    {
 
         if (isset($this->options['delimiter']))
             return $this->options['delimiter'];
@@ -759,33 +819,36 @@ class CsvResultsExporter extends ResultSetExporter {
         return Internationalization::getCSVDelimiter();
     }
 
-    function dump($tmp=false) {
+    function dump($tmp = false)
+    {
         if (!$this->output)
-             $this->output = fopen('php://output', 'w');
+            $this->output = fopen('php://output', 'w');
 
         $delimiter = $this->getDelimiter();
         // Output a UTF-8 BOM (byte order mark)
         fputs($this->output, chr(0xEF) . chr(0xBB) . chr(0xBF));
         fputcsv($this->output, $this->getHeaders(), $delimiter);
-        while ($row=$this->next())
+        while ($row = $this->next())
             fputcsv($this->output, array_map(
-                function($v){
+                function ($v) {
                     if (preg_match('/^[=\-+@].*/', $v))
-                        return "'".$v;
+                        return "'" . $v;
                     return $v;
                 }, $row),
-            $delimiter);
+                $delimiter);
 
         if (!$tmp)
             fclose($this->output);
     }
 }
 
-class JsonResultsExporter extends ResultSetExporter {
-    function dump() {
-        require_once(INCLUDE_DIR.'class.json.php');
+class JsonResultsExporter extends ResultSetExporter
+{
+    function dump()
+    {
+        require_once(INCLUDE_DIR . 'class.json.php');
         $rows = array();
-        while ($row=$this->nextArray()) {
+        while ($row = $this->nextArray()) {
             $rows[] = $row;
         }
         echo JsonDataEncoder::encode($rows);
@@ -799,7 +862,8 @@ require_once INCLUDE_DIR . 'class.signal.php';
 define('OSTICKET_BACKUP_SIGNATURE', 'osTicket-Backup');
 define('OSTICKET_BACKUP_VERSION', 'B');
 
-class DatabaseExporter {
+class DatabaseExporter
+{
 
     var $stream;
     var $options;
@@ -820,32 +884,36 @@ class DatabaseExporter {
         USER_ACCOUNT_TABLE, ORGANIZATION_TABLE, NOTE_TABLE
     );
 
-    function __construct($stream, $options=array()) {
+    function __construct($stream, $options = array())
+    {
         $this->stream = $stream;
         $this->options = $options;
     }
 
-    function write_block($what) {
+    function write_block($what)
+    {
         fwrite($this->stream, JsonDataEncoder::encode($what));
         fwrite($this->stream, "\n");
     }
 
-    function dump_header() {
+    function dump_header()
+    {
         $header = array(
             array(OSTICKET_BACKUP_SIGNATURE, OSTICKET_BACKUP_VERSION),
             array(
-                'version'=>THIS_VERSION,
-                'table_prefix'=>TABLE_PREFIX,
-                'salt'=>SECRET_SALT,
-                'dbtype'=>DBTYPE,
-                'streams'=>DatabaseMigrater::getUpgradeStreams(
+                'version' => THIS_VERSION,
+                'table_prefix' => TABLE_PREFIX,
+                'salt' => SECRET_SALT,
+                'dbtype' => DBTYPE,
+                'streams' => DatabaseMigrater::getUpgradeStreams(
                     UPGRADE_DIR . 'streams/'),
             ),
         );
         $this->write_block($header);
     }
 
-    function dump($error_stream) {
+    function dump($error_stream)
+    {
         // Allow plugins to change the tables exported
         Signal::send('export.tables', $this, $this->tables);
         $this->dump_header();
@@ -878,7 +946,8 @@ class DatabaseExporter {
         }
     }
 
-    function transfer($destination, $query, $callback=false, $options=array()) {
+    function transfer($destination, $query, $callback = false, $options = array())
+    {
         $header_out = false;
         $res = db_query($query, true, false);
         $i = 0;
@@ -897,7 +966,8 @@ class DatabaseExporter {
         $this->write_block(array('end-table'));
     }
 
-    function transfer_array($destination, $array, $keys, $options=array()) {
+    function transfer_array($destination, $array, $keys, $options = array())
+    {
         $this->write_block(
             array('table', $destination, $keys, $options));
         foreach ($array as $row) {
@@ -907,17 +977,20 @@ class DatabaseExporter {
     }
 }
 
-class TicketZipExporter {
+class TicketZipExporter
+{
     var $ticket;
     var $tmpfiles;
 
-    function __construct(Ticket $ticket) {
+    function __construct(Ticket $ticket)
+    {
         $this->ticket = $ticket;
         $this->tmpfiles = array();
     }
 
-    function addTicket($ticket, $zip, $prefix, $notes=true, $psize=null) {
-        require_once(INCLUDE_DIR.'class.pdf.php');
+    function addTicket($ticket, $zip, $prefix, $notes = true, $psize = null)
+    {
+        require_once(INCLUDE_DIR . 'class.pdf.php');
 
         $pdf_file = $this->tmpfiles[] = tempnam(sys_get_temp_dir(), 'zip');
         $pdf = new Ticket2PDF($ticket, $psize, $notes);
@@ -943,18 +1016,19 @@ class TicketZipExporter {
         // Include custom fields attachments
         foreach (DynamicFormEntry::forTicket($ticket->getId()) as $form) {
             $answers = $form->getAnswers()->filter(
-                    array('field__type' => 'files'));
+                array('field__type' => 'files'));
             foreach ($answers as $answer) {
                 $field = $answer->getField();
                 foreach ($field->getAttachments() as $a)
                     $zip->addFromString("{$prefix}/{$a->getFilename()}",
-                            $a->getFile()->getData());
+                        $a->getFile()->getData());
             }
         }
     }
 
-    function addTask($task, $zip, $prefix, $notes=true, $psize=null) {
-        require_once(INCLUDE_DIR.'class.pdf.php');
+    function addTask($task, $zip, $prefix, $notes = true, $psize = null)
+    {
+        require_once(INCLUDE_DIR . 'class.pdf.php');
 
         $pdf_file = $this->tmpfiles[] = tempnam(sys_get_temp_dir(), 'zip');
         $pdf = new Task2PDF($task, ['psize' => $psize]);
@@ -979,17 +1053,18 @@ class TicketZipExporter {
         // Include custom fields attachments
         foreach (DynamicFormEntry::forTask($task->getId()) as $form) {
             $answers = $form->getAnswers()->filter(
-                    array('field__type' => 'files'));
+                array('field__type' => 'files'));
             foreach ($answers as $answer) {
                 $field = $answer->getField();
                 foreach ($field->getAttachments() as $a)
                     $zip->addFromString("{$prefix}/{$task->getNumber()}/{$a->getFilename()}",
-                            $a->getFile()->getData());
+                        $a->getFile()->getData());
             }
         }
     }
 
-    function download($options = array()) {
+    function download($options = array())
+    {
         global $thisstaff;
 
         $notes = isset($options['notes']) ? $options['notes'] : false;
@@ -1021,18 +1096,18 @@ class TicketZipExporter {
             $fp = fopen($zipfile, 'r');
             fpassthru($fp);
             fclose($fp);
-        }
-        finally {
+        } finally {
             foreach ($this->tmpfiles as $T)
                 @unlink($T);
             unlink($zipfile);
         }
     }
 }
+
 function filterData(&$str): void
 {
-    $str= preg_replace("/\t/", "\\t",$str);
-    $str= preg_replace("/\r?\n/", "\\n",$str);
+    $str = preg_replace("/\t/", "\\t", $str);
+    $str = preg_replace("/\r?\n/", "\\n", $str);
     if (strstr($str, ""))
-        $str='"'.str_replace('"', '""', $str). '"';
+        $str = '"' . str_replace('"', '""', $str) . '"';
 }

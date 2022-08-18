@@ -188,13 +188,20 @@ inner join ost_staff os on os.staff_id=assignedTo;");
         }
     return $excelData;
     }
-static function saveCards(){
+static function saveCards() : bool{
     $filename="activities-data_".date("Y-m-d").".xls";
-        ob_start();
-        self::dumpCards();
+
+    /*ob_start();
+    self::dumpCards();
         $cards=ob_get_contents();
-        ob_clean();
-        Http::download($filename, "text/csv", $cards);
+        ob_end_clean();
+        //if ($cards)
+        Http::download($filename, "text/csv",$cards);
+        return false;*/
+    $export=new CsvExporter();
+    $export->init();
+    $export->write(self::dumpQuery())
+    return false;
 }
 
     static function saveTasks($sql, $filename, $how='csv') {

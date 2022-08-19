@@ -531,10 +531,12 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
 
     $(document).ready(() => {
         //const id_user= $("#id_staff").val();
-        $("#invite-members").on("submit", (e) => {
+        $("#invite-members").on("submit", function(e)  {
             e.preventDefault();
             const form = $(this);
             const email = $("#email").val().trim();
+            const ldone = "<label id='ldone'>Done 👌</label>";
+            $("#ldone").remove();
             $.ajax({
                 url: "ajax.php/members/invite",
                 type: "post",
@@ -545,9 +547,12 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
                 },
                 success: data => {
                     console.log(data);
-                    form.find("input[type='submit']").append("Done 👌");
+                    if (data==='"done"')
+                        {
+                            form.append(ldone);
+                        }
                 },
-                error: data => console.log(data)
+                error: data => console.log("error")
             })
         });
     });

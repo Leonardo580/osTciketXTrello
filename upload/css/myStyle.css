@@ -121,6 +121,6 @@ i:hover {
     border-radius: 10px;
     border-style: solid;
     border-color: gray;
-    grid-template-rows: max-content 30px 1fr;
+    grid-template-rows: max-content 1rem 1fr;
     padding: 10px;
 }

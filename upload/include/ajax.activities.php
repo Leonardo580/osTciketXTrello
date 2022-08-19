@@ -11,6 +11,11 @@ class ActivitiesAjaxAPI extends AjaxController{
         $query->bind_param("isiiisi",$idc, $_POST["content"], $status, $id_user, $_POST['assignedTo']
             ,  $_POST['expected'], $_POST['ticket_id']);
         $query->execute();
+        if ($_POST['ticket_id']){
+            $query=$link->prepare("update pending_tickets set isActivity=true where ticket_id=?");
+            $query->bind_param("i", $_POST['ticket_id']);
+            $query->execute();
+        }
         mysqli_close($link);
 
         return $this->json_encode("success");

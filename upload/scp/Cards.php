@@ -23,8 +23,9 @@ $cards = array();
 while ($row = mysqli_fetch_array($result)) {
     $cards[] = $row;
 }
-$query=$link->prepare("select distinct ticket_id, subject, priority from ost_ticket__cdata o
-where (ticket_id not in (select id_ticket from activities where id_ticket is not null))");
+$query=$link->prepare("select c.ticket_id, subject, priority from ost_ticket__cdata c
+inner join pending_tickets p on c.ticket_id = p.ticket_id
+where (p.isActivity=false);");
 $query->execute();
 $res=$query->get_result();
 $tickets=[];
@@ -40,11 +41,11 @@ mysqli_close($link);
 <h2 style="color: black">Board's Cards: </h2>
 <hr>
 <h3>Awaiting tickets:</h3>
-<div class="cards">
+<div class="cards tick" >
     <?php foreach($tickets as $t){ ?>
 
         <div>
-            <div  class="tt tick" >
+            <article  class="tt tick" >
                 <header>
                     <?= $t['subject'] ?>
                 </header>
@@ -52,7 +53,7 @@ mysqli_close($link);
                 <div class="content">
                     <a href="tickets.php?id=<?= $t['ticket_id'] ?>" style="float: right"></a>
                 </div>
-            </div>
+            </article>
             <a href="tickets.php?id=<?= $t['ticket_id'] ?>" style="float: right">see more</a>
         </div>
     <?php }?>
@@ -383,7 +384,7 @@ where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =
                 </form>
             </div>
             <div id="new-org-form" style="display:block;">
-                <form method="post" class="" action="" id="add-activity">
+                <form method="post" class="" action="" id="">
                     <?php
                     csrf_token();
                     ?>
@@ -806,7 +807,7 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
             ' </form>';
         $('#newCard').click(function () {
             if (!$("#new-card-form").exists()) {
-                $('.cards').before($(this)).append(form).append(this);
+                $('.cards:not(.tick)').before($(this)).append(form).append(this);
                 $('#new-card-form').on("submit", function (e) {
                     let form = this;
                     e.preventDefault();
@@ -824,7 +825,7 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
                             let id = JSON.parse(data)[0]
                             $(form).remove();
 
-                            $('.cards').before($("#newCard")).append(
+                            $('.cards:not(.tick)').before($("#newCard")).append(
                                 '<article class="card" id="' + id + '">' +
                                 '<header>' +
                                 '<span  style="float: right; padding-left: 5px" onclick="deleteCard(' + id + ')"> <i class="icon-trash" ></i></span>' +

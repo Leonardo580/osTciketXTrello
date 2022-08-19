@@ -200,10 +200,12 @@ inner join ost_staff os on os.staff_id=assignedTo;");
     {
         $filename = "activities-data_" . date("Y-m-d") . ".xls";
         ob_start();
-        self::dumpCards();
+        ob_flush();
+        echo self::dumpCards();
+
         $cards = ob_get_contents();
-        ob_end_clean();
-        if ($cards)
+        ob_end_flush();
+        //if ($cards)
             Http::download($filename, "text/csv", $cards);
         return false;
 

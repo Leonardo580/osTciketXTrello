@@ -198,13 +198,11 @@ inner join ost_staff os on os.staff_id=assignedTo;");
 
     static function saveCards()
     {
-        $filename = "activities-data_" . date("Y-m-d") . ".xls";
+        $filename = "activities-data_" . date("Y-m-d") . ".csv";
         ob_start();
-        ob_flush();
         echo self::dumpCards();
-
         $cards = ob_get_contents();
-        ob_end_flush();
+        ob_end_clean();
         //if ($cards)
             Http::download($filename, "text/csv", $cards);
         return false;

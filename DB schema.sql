@@ -1,12 +1,12 @@
 create table repos (
-    id int(10) unsigned AUTO_INCREMENT,
-    title varchar(255),
-    description text,
-    creator int(11) unsigned,
-    dateCreated date default sysdate(),
-    constraint primary key (id),
-    constraint fk_rp foreign key (creator) references ost_staff(staff_id) on delete cascade on update cascade
-);
+        id int(10) unsigned AUTO_INCREMENT,
+        title varchar(255),
+        description text,
+        creator int(11) unsigned,
+        dateCreated date default sysdate(),
+        constraint primary key (id),
+        constraint fk_rp foreign key (creator) references ost_staff(staff_id) on delete cascade on update cascade
+        );
 create table boards (
                         id int(10) unsigned auto_increment primary key,
                         id_repo int(10) unsigned,
@@ -38,41 +38,22 @@ create table activities(
     status int(8) unsigned,
     assignedTo int(11) unsigned default id_user,
     expected date,
+    assignTo int(11) unsigned default id_user,
+    id_ticket int(11) unsigned default null,
     constraint pk_ac primary key (id),
     constraint fk_ac foreign key (id_card) references Cards(id) on delete cascade on update cascade ,
-    constraint fk_au foreign key (id_user) references members(id_user) on delete cascade on update cascade
+    constraint fk_au foreign key (id_user) references members(id_user) on delete cascade on update cascade,
+    constraint fk_tc foreign key (id_ticket) references ost_ticket__cdata(ticket_id)
 );
-alter table activities add assignedTo int(11) unsigned default activities.id_user;
-alter table activities add id_ticket int(11) unsigned  default null;
-alter table activities add constraint fk_tc foreign key (id_ticket) references ost_ticket__cdata(ticket_id);
-
-create procedure add_activity( in id_card int(10) unsigned, in content varchar(128), id_user int(10) unsigned)
-begin
-    declare idr int(10) unsigned;
-    select repos.id into idr from repos inner join boards
-        on repos.id =boards.id_repo
-    inner join cards on boards.id = cards.id_board
-    inner join activities on activities.id_card=cards.id;
-
-end;
 
 create table pending_members (
     token char(40) not null,
     id_user int(11) unsigned,
-    tmstmp timestamp default current_timestamp,
-    constraint pk_pm primary key (token)
+    id_repo int(10) unsigned,
+    tmstmp integer unsigned not null,
+    constraint pk_pm primary key (token),
+    constraint fk_pm foreign key (id_repo) references repos(id)
 );
-alter table pending_members add id_repo int(10) unsigned;
-alter table pending_members add constraint fk_pm foreign key (id_repo) references repos(id);
-alter table pending_members modify tmstmp integer unsigned not null;
-
-drop procedure if exists osticket.updateStatus;
-delimiter  $$
-create procedure updateStatus()
-begin
-    update activities set status=IF(
-        status!=2 and date(expected)<date(sysdate())    , 3, status);
-end$$
 
 
 create table pending_tickets (
@@ -81,7 +62,21 @@ create table pending_tickets (
     constraint fk_pt foreign key (ticket_id) references ost_ticket__cdata(ticket_id)
 );
 
+
 create trigger pending_ticket_insert after insert on ost_ticket__cdata
     for each row
     insert into pending_tickets (ticket_id, isActivity) values (NEW.ticket_id, false);
 
+select repos.id into idr from repos inner join boards
+                                               on repos.id =boards.id_repo
+                                    inner join cards on boards.id = cards.id_board
+                                    inner join activities on activities.id_card=cards.id;
+
+drop procedure if exists osticket.updateStatus;
+
+delimiter  $$
+create procedure updateStatus()
+begin
+    update activities set status=IF(
+                    status!=2 and date(expected)<date(sysdate())    , 3, status);
+end$$

@@ -10,7 +10,7 @@ $open_name = _P('queue-name',
     /* This is the name of the open tasks queue */
     'Open');
 
-
+require (INCLUDE_DIR."activities.php");
 
 require_once(STAFFINC_DIR . 'header.inc.php');
 $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
@@ -111,8 +111,8 @@ mysqli_close($link);
             </div>
             <?php
             $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
-            $sql = "select id, id_card, content,assignedTo as 'assignedTo', status, id_user, o.username, expected from activities a
-    inner  join ost_staff o on o.staff_id =a.assignedTo where id_card=?";
+            $sql = "select id, id_card, content,assignedTo as 'assignedTo', status, id_user, o.username, expected, priority from activities a
+    inner  join ost_staff o on o.staff_id =a.assignedTo where id_card=? order by priority desc";
             $query = $link->prepare($sql);
             $query->bind_param("i", $c['id']);
             $query->execute();
@@ -129,43 +129,18 @@ mysqli_close($link);
             $done = "<div class='cont'  style='display: none' name='done-$idc' >";
             $overdue = "<div class='cont'  style='display: none' name='over-$idc' >";
             foreach ($activities as $a) {
-                $ida = $a['id'];
-                $content = $a['content'];
-                $assignedTo= $a['assignedTo'];
-                $expected =$a['expected'];
-                $idc=$a['id_user'];
-                $d = date_diff(date_create($expected), date_create())->d;
-                if ($d ==1)
-                    $expected="Tomorrow";
-                elseif ($d <1)
-                    $expected="To Day";
+
                 switch ($a["status"]) {
                     case 0:
-                        $todo .= "<div class='activity drag todo' draggable='true' onclick='openActivity($ida, this,$assignedTo, $idc )'>
-<label style='float: right'>" . "assigned to : " . $a['username'] . "</label>
-<p class=''>" . $content . "</p>
-<div>".$expected."</div>
-                                    </div><br>";
+                        $todo .= activityContainer($a, "todo");
                         break;
                     case 1:
-                        $inprog .= "<div class='activity drag in-progress' draggable='true' onclick='openActivity($ida, this,$assignedTo, $idc)'>
-<label style='float: right'>" . "assigned to : " . $a['username'] . "</label>
-<p class=''>" . $content . "</p>
-<div>".$expected."</div>
-                                    </div><br>";
+                        $inprog .=activityContainer($a, "in-progress");
                         break;
                     case 2:
-                        $done .= "<div class='activity drag done' draggable='true' onclick='openActivity($ida, this, $assignedTo, $idc)'>
-<label style='float: right'>" . "assigned to : " . $a['username'] . "</label>
-<p class='' style='text-decoration: line-through;'>" . $content . "</p>
-<div>".$expected."</div>
-                                    </div><br>";
+                        $done .= activityContainer($a, "done");
                     case 3:
-                        $overdue.="<div class='activity drag overdue' draggable='true' onclick='openActivity($ida, this, $assignedTo, $idc)'>
-<label style='float: right'>" . "assigned to : " . $a['username'] . "</label>
-<p class='' >" . $content . "</p>
-<div>".$expected."</div>
-                                    </div><br>";
+                        $overdue.=activityContainer($a, "overdue");
                 }
             }
             echo "<br>" . $todo . "</div>";
@@ -283,6 +258,16 @@ where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =
                             <td class="required">Expected to be delivered :</td>
                             <td>
                                 <input type="date" min="<?=  date("Y-m-d"); ?>" >
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="required">Priority: </td>
+                            <td>
+                                <select id="priority">
+                                    <option value="LOW">Low</option>
+                                    <option value="MEDIUM">Medium</option>
+                                    <option value="HIGH">High</option>
+                                </select>
                             </td>
                         </tr>
 
@@ -625,9 +610,17 @@ where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =
                                     <option value="3">Overdue</option>
                                 </select>
                             </td>
+
                         </tr>
 
-
+                        <td class="required">Priority: </td>
+                        <td >
+                            <select id="priority-edit">
+                                <option value="LOW">Low</option>
+                                <option value="MEDIUM">Medium</option>
+                                <option value="HIGH">High</option>
+                            </select>
+                        </td>
                         </tbody>
                     </table>
                     <hr>
@@ -778,6 +771,7 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
                             '</div>' +
                             '</article>'
                         );
+                        location.reload();
 
 
                     },
@@ -840,7 +834,7 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
                                 '<button style="text-align: left; " onclick="addActivity(' + id + ')"><i class="icon-plus icon-2x" style="float: left">Add Activity</i></button>' +
                                 '</article>'
                             ).append($("#newCard"));
-
+                            location.reload();
 
                         },
                         error: function (data) {
@@ -933,6 +927,7 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
             const form = $(this);
             const select = form.find("select");
             let assignedTo=id_user;
+            const priority= form.find("#priority").val();
             console.log();
             if (!select.is("[disabled]"))
              assignedTo = select.val();
@@ -944,7 +939,8 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
                     content: content,
                     id_user: id_user,
                     assignedTo: assignedTo,
-                    expected: expected
+                    expected: expected,
+                    priority : priority
                 },
                 success: function (data) {
 
@@ -992,8 +988,7 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
         }
     }
 const creator = <?php echo $creator; ?>;
-    function openActivity(id, element, assignedTo, idc) {
-        console.log(idc, id_user, creator);
+    function openActivity(id, element, assignedTo, idc,priority) {
         if (id_user==idc || id_user==creator) {
             const popup = $("#popup-edit");
             popup.css("display", "block").css("top", "120px");
@@ -1001,10 +996,18 @@ const creator = <?php echo $creator; ?>;
             const p = $(element).children("p").text();
             const form = popup.find("form");
             $("#assigned-id").children("option[value='" + assignedTo + "']")
-            const dt=$(element).children("div").text();
-            form.find("input[type='date']").val(dt);
+            const dt=$(element).find("div").text();
+            let date='';
+            if (dt.indexOf("To Day")!==-1)
+                date = new Date(Date.now()).toISOString().split("T")[0];
+            else if (dt.indexOf("Tomorrow")!==-1) {
+                date = new Date(Date.now()+1).toISOString().split("T")[0];
+            }else
+                date=dt.match(/\d{4}-\d{2}-\d{2}/)[0];
+            form.find("input[type='date']").val(date);
             const st=getStatus($(element))
             $("#sl-status").val(st);
+            $("#priority-edit").val(priority)
             $("#cnt").text(p);
             $("#delete-activity").on("click", function (e) {
                 e.preventDefault();
@@ -1030,7 +1033,8 @@ const creator = <?php echo $creator; ?>;
                 let status = $("#sl-status").val();
                 const assignedto = $("#assigned-id").val();
                 const expected = $(this).find("input[type='date']").val();
-                console.log($("#assigned-id option:selected").val());
+                const priority= form.find("#priority-edit").val();
+                console.log(priority);
                 $.ajax({
                         url: "ajax.php/activities/edit/" + id,
                         type: 'POST',
@@ -1039,7 +1043,8 @@ const creator = <?php echo $creator; ?>;
                             status: status,
                             id_user: id_user,
                             assignedTo: assignedto,
-                            expected: expected
+                            expected: expected,
+                            priority: priority
                         },
                         success: function (data) {
                             console.log("success");

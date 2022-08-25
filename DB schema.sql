@@ -17,7 +17,7 @@ create table members (
     id_repo int(10) unsigned,
     id_user int(11) unsigned,
     constraint fk_m foreign key (id_repo) references repos(id) on delete cascade on update cascade ,
-    constraint fk_u foreign key (id_user) references ost_staff(staff_id) on delete cascade on delete cascade,
+    constraint fk_u foreign key (id_user) references ost_staff(staff_id) on delete cascade on update cascade,
     constraint pk_m primary key (id_repo, id_user)
 );
 
@@ -40,6 +40,7 @@ create table activities(
     expected date,
     assignTo int(11) unsigned default id_user,
     id_ticket int(11) unsigned default null,
+    priority enum('LOW', 'MEDIUM', 'HIGH') not null,
     constraint pk_ac primary key (id),
     constraint fk_ac foreign key (id_card) references Cards(id) on delete cascade on update cascade ,
     constraint fk_au foreign key (id_user) references members(id_user) on delete cascade on update cascade,

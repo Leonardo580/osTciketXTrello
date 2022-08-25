@@ -5,11 +5,11 @@ class ActivitiesAjaxAPI extends AjaxController{
     {
 
         $link=mysqli_connect("localhost", "anas", "22173515", "osticket");
-        $query =$link->prepare("insert into activities (id_card, content, status, id_user, assignedTo, expected, id_ticket) values (?,?,?,?,?,?,?);");
+        $query =$link->prepare("insert into activities (id_card, content, status, id_user, assignedTo, expected, id_ticket, priority) values (?,?,?,?,?,?,?,?);");
         $status=0;
         $id_user=intval($_POST['id_user']);
-        $query->bind_param("isiiisi",$idc, $_POST["content"], $status, $id_user, $_POST['assignedTo']
-            ,  $_POST['expected'], $_POST['ticket_id']);
+        $query->bind_param("isiiisis",$idc, $_POST["content"], $status, $id_user, $_POST['assignedTo']
+            ,  $_POST['expected'], $_POST['ticket_id'],$_POST['priority']);
         $query->execute();
         if ($_POST['ticket_id']){
             $query=$link->prepare("update pending_tickets set isActivity=true where ticket_id=?");
@@ -33,9 +33,10 @@ class ActivitiesAjaxAPI extends AjaxController{
         $link=mysqli_connect("localhost", "anas", "22173515", "osticket");
         $content = $_POST['content'];
         $status = $_POST['status'];
-        $query= $link->prepare("update activities set content=?, status=? , id_user=? , assignedTo=?, expected=? where id=?");
+        $query= $link->prepare("update activities set content=?, status=? , id_user=? , assignedTo=?, expected=?, priority=? where id=?");
         $id_user=$_POST['id_user'];
-        $query->bind_param("siiisi", $content, $status, $id_user,$_POST['assignedTo'],$_POST['expected'], $id );
+        $query->bind_param("siiissi", $content, $status, $id_user,$_POST['assignedTo'],
+            $_POST['expected'],$_POST['priority'],  $id );
         $query->execute();
 
         $query->close();

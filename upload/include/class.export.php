@@ -199,12 +199,14 @@ inner join ost_staff os on os.staff_id=assignedTo;");
     static function saveCards()
     {
         $filename = "activities-data_" . date("Y-m-d") . ".csv";
+        ob_end_clean();
         ob_start();
+
         echo self::dumpCards();
         $cards = ob_get_contents();
         ob_end_clean();
         //if ($cards)
-            Http::download($filename, "text/csv", $cards);
+            Http::download($filename, "text/csv", $cards, 'attachment');
         return false;
 
     }

@@ -527,7 +527,7 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
         });
     }
 
-    const idrr = <?php echo $_GET['idr']; xdebug_var_dump($_GET);?>;
+    const idrr = <?php echo $_GET['idr']; ?>;
 
     $(document).ready(() => {
         //const id_user= $("#id_staff").val();

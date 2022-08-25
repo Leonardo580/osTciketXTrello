@@ -13,20 +13,24 @@ $token= $_GET['token'];
 $query="select token, tmstmp as 'tmstmp', id_repo, id_user from pending_members where token='".$token."'";
 $res=mysqli_query($link, $query);
 
+$pm=mysqli_fetch_array($res);
+
+$timestamp=date($pm['tmstmp']);
+$current_time=date(time());
+$id_user = $pm['id_user'];
 
 if (!$res){
     echo "<h1>Unknown error</h1>";
-}else {
-    $pm=mysqli_fetch_array($res);
-
-    $timestamp=date($pm['tmstmp']);
-    $current_time=date(time());
+}elseif ($thissaff->getId()!= $id_user){
+    Http::redirect(ROOT_PATH.'scp/login.php');
+}
+else {
 
 
     if ( $_SERVER["REQUEST_TIME"] - $pm['tmstmp'] < 86400){
         $idr =$pm['id_repo'];
         $q=$link->prepare("insert into members (id_repo, id_user) VALUES (? , ?)");
-        $q->bind_param("ii", $idr, $pm['id_user']);
+        $q->bind_param("ii", $idr, $id_user);
         $q->execute();
         $q->close();
         echo "<h1>the invite has been accepted</h1>";

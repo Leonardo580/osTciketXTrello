@@ -63,6 +63,17 @@ create table pending_tickets (
     constraint fk_pt foreign key (ticket_id) references ost_ticket__cdata(ticket_id)
 );
 
+create table comments (
+                          id int(11) unsigned auto_increment,
+                          id_user int(11) unsigned not null,
+                          id_activity int(11) unsigned not null,
+                          comment varchar(512) not null,
+                          dateCreated timestamp default current_timestamp,
+                          constraint pk_cc primary key (id),
+                          constraint fk_cu foreign key (id_user) references ost_staff(staff_id) on delete cascade on update cascade,
+                          constraint fk_ca foreign key (id_activity) references activities(id) on delete cascade on update cascade
+);
+alter table comments add dateCreated timestamp default current_timestamp;
 
 create trigger pending_ticket_insert after insert on ost_ticket__cdata
     for each row

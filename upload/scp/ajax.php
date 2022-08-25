@@ -263,6 +263,13 @@ $dispatcher = patterns('',
 url("^/members/", patterns("ajax.members.php:MembersAjaxAPI",
     url("^invite$", "invite")
 )),
+    //function of comments
+url("^/comments/", patterns("ajax.comments.php:CommentsAjaxAPI",
+    url ("^getComments/(?P<id_activity>\d+)$", "getComments"),
+    url("^add", "add"),
+    url("^delete/(?P<id>\d+)$", "delete"),
+url("^edit", "edit")
+)),
     url('^/thread/', patterns('ajax.thread.php:ThreadAjaxAPI',
         url_get('^(?P<tid>\d+)/collaborators/(?P<manage>\d+)/preview$', 'previewCollaborators'),
         url_get('^(?P<tid>\d+)/collaborators/(?P<manage>\d+)$', 'showCollaborators'),

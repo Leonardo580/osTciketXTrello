@@ -10,7 +10,7 @@ $open_name = _P('queue-name',
     /* This is the name of the open tasks queue */
     'Open');
 
-require (INCLUDE_DIR."activities.php");
+require(INCLUDE_DIR . "activities.php");
 
 require_once(STAFFINC_DIR . 'header.inc.php');
 $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
@@ -23,29 +23,29 @@ $cards = array();
 while ($row = mysqli_fetch_array($result)) {
     $cards[] = $row;
 }
-$query=$link->prepare("select c.ticket_id, subject, priority from ost_ticket__cdata c
+$query = $link->prepare("select c.ticket_id, subject, priority from ost_ticket__cdata c
 inner join pending_tickets p on c.ticket_id = p.ticket_id
 where (p.isActivity=false);");
 $query->execute();
-$res=$query->get_result();
-$tickets=[];
-while ($row= $res->fetch_assoc())
-    $tickets[]=$row;
+$res = $query->get_result();
+$tickets = [];
+while ($row = $res->fetch_assoc())
+    $tickets[] = $row;
 
 mysqli_close($link);
 
 
 ?>
 <link rel="stylesheet" href="../css/myStyle.css">
-<a href="ExportRepo.php" class="button action-button"  style="float: right;"><i class="icon-download" ></i> Export</a>
+<a href="ExportRepo.php" class="button action-button" style="float: right;"><i class="icon-download"></i> Export</a>
 <h2 style="color: black">Board's Cards: </h2>
 <hr>
 <h3>Awaiting tickets:</h3>
-<div class="cards tick" >
-    <?php foreach($tickets as $t){ ?>
+<div class="cards tick">
+    <?php foreach ($tickets as $t) { ?>
 
         <div>
-            <article  class="tt tick" >
+            <article class="tt tick">
                 <header>
                     <?= $t['subject'] ?>
                 </header>
@@ -56,7 +56,7 @@ mysqli_close($link);
             </article>
             <a href="tickets.php?id=<?= $t['ticket_id'] ?>" style="float: right">see more</a>
         </div>
-    <?php }?>
+    <?php } ?>
 </div>
 <hr>
 <!--<div class="row">
@@ -135,18 +135,18 @@ mysqli_close($link);
                         $todo .= activityContainer($a, "todo");
                         break;
                     case 1:
-                        $inprog .=activityContainer($a, "in-progress");
+                        $inprog .= activityContainer($a, "in-progress");
                         break;
                     case 2:
                         $done .= activityContainer($a, "done");
                     case 3:
-                        $overdue.=activityContainer($a, "overdue");
+                        $overdue .= activityContainer($a, "overdue");
                 }
             }
             echo "<br>" . $todo . "</div>";
-            echo   $inprog . "</div>";
-            echo   $done . "</div>";
-            echo   $overdue . "</div>";
+            echo $inprog . "</div>";
+            echo $done . "</div>";
+            echo $overdue . "</div>";
             ?>
             <br>
             <button style="text-align: left; " onclick="addActivity(<?php echo $c['id'] ?>)"><i
@@ -239,14 +239,15 @@ where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =
                                     $members[] = $row;
                                 $query->close();
                                 ?>
-                                <select title="assigned to" id="assigned-idd" disabled="<?php $creator = $members[0]['creator'];
-                                echo $thisstaff->getId() == $creator ?>">
+                                <select title="assigned to" id="assigned-idd"
+                                        disabled="<?php $creator = $members[0]['creator'];
+                                        echo $thisstaff->getId() == $creator ?>">
 
                                     <?php
                                     if ($thisstaff->getId() == $creator)
                                         for ($i = 0; $i < count($members); $i++) {
                                             ?>
-                                            <option value="<?php echo $members[$i]['staff_id']; ?>" >
+                                            <option value="<?php echo $members[$i]['staff_id']; ?>">
                                                 <?php echo $members[$i]['username']; ?>
                                             </option>
                                         <?php } ?>
@@ -257,11 +258,11 @@ where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =
                         <tr>
                             <td class="required">Expected to be delivered :</td>
                             <td>
-                                <input type="date" min="<?=  date("Y-m-d"); ?>" >
+                                <input type="date" min="<?= date("Y-m-d"); ?>">
                             </td>
                         </tr>
                         <tr>
-                            <td class="required">Priority: </td>
+                            <td class="required">Priority:</td>
                             <td>
                                 <select id="priority">
                                     <option value="LOW">Low</option>
@@ -335,7 +336,8 @@ where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =
         </script>
     </div>
 </div>
-<div class="dialog draggable ui-draggable size-normal" id="popup-ticket" style="top: 107.714px; left: 166px; display: none;">
+<div class="dialog draggable ui-draggable size-normal" id="popup-ticket"
+     style="top: 107.714px; left: 166px; display: none;">
     <div id="popup-loading" style="display: none;">
         <h1 style="margin-bottom: 20px; margin-top: 6px;"><i class="icon-spinner icon-spin icon-large"></i>
             Loading ...</h1>
@@ -406,14 +408,15 @@ where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =
                                     $members[] = $row;
                                 $query->close();
                                 ?>
-                                <select title="assigned to" id="assigned-iddd" disabled="<?php $creator = $members[0]['creator'];
-                                echo $thisstaff->getId() == $creator ?>">
+                                <select title="assigned to" id="assigned-iddd"
+                                        disabled="<?php $creator = $members[0]['creator'];
+                                        echo $thisstaff->getId() == $creator ?>">
 
                                     <?php
                                     if ($thisstaff->getId() == $creator)
                                         for ($i = 0; $i < count($members); $i++) {
                                             ?>
-                                            <option value="<?php echo $members[$i]['staff_id']; ?>" >
+                                            <option value="<?php echo $members[$i]['staff_id']; ?>">
                                                 <?php echo $members[$i]['username']; ?>
                                             </option>
                                         <?php } ?>
@@ -422,10 +425,10 @@ where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =
                             </td>
                         </tr>
                         <tr>
-                            <td class="required">Card: </td>
+                            <td class="required">Card:</td>
                             <td>
                                 <select title="" id="sl-cards">
-                                    <?php foreach($cards as $c ){?>
+                                    <?php foreach ($cards as $c) { ?>
                                         <option value="<?= $c['id'] ?>"> <?= $c['title'] ?></option>
                                     <?php } ?>
                                 </select>
@@ -434,7 +437,7 @@ where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =
                         <tr>
                             <td class="required">Expected to be delivered :</td>
                             <td>
-                                <input type="date" min="<?=  date("Y-m-d"); ?>" >
+                                <input type="date" min="<?= date("Y-m-d"); ?>">
                             </td>
                         </tr>
 
@@ -575,18 +578,18 @@ where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =
                                         for ($i = 0; $i < count($members); $i++) {
                                             ?>
                                             <option value="<?php echo $members[$i]['staff_id']; ?>">
-                                                <?php echo $members[$i]['username'];?>
+                                                <?php echo $members[$i]['username']; ?>
                                             </option>
                                         <?php }
                                     else {
-                                        for ($i=0; $i<count($members); $i++)
-                                            if ($members[$i]["staff_id"]==$thisstaff->getId()){ ?>
+                                        for ($i = 0; $i < count($members); $i++)
+                                            if ($members[$i]["staff_id"] == $thisstaff->getId()) { ?>
                                                 <option value="<?php echo $members[$i]['staff_id']; ?>">
-                                                <?php echo $members[$i]['username'];?>
-                                            </option>
-                                    <?php
+                                                    <?php echo $members[$i]['username']; ?>
+                                                </option>
+                                                <?php
                                             }
-                                    }?>
+                                    } ?>
 
                                 </select>
                             </td>
@@ -595,7 +598,7 @@ where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =
                         <tr>
                             <td>Expected to be delivered :</td>
                             <td>
-                                <input type="date" min="<?=  date("Y-m-d"); ?>">
+                                <input type="date" min="<?= date("Y-m-d"); ?>">
                             </td>
                         </tr>
                         <tr>
@@ -613,8 +616,8 @@ where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =
 
                         </tr>
 
-                        <td class="required">Priority: </td>
-                        <td >
+                        <td class="required">Priority:</td>
+                        <td>
                             <select id="priority-edit">
                                 <option value="LOW">Low</option>
                                 <option value="MEDIUM">Medium</option>
@@ -638,6 +641,13 @@ where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =
                 </form>
             </div>
             <div class="clear"></div>
+            <hr>
+            <div style="padding: 1rem; font-size: larger"> Comments:</div>
+            <i id="addComment" class="icon-comment" style="float: right"></i>
+            <div class="comments">
+                <div style="font-weight: bold">Samullel</div>
+                <div style="padding: 0.8rem;">this is the ciodfn dsjssjsjdk</div>
+            </div>
         </div>
         <script type="text/javascript">
             $(function () {
@@ -926,12 +936,12 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
 
             const form = $(this);
             const select = form.find("select");
-            let assignedTo=id_user;
-            const priority= form.find("#priority").val();
+            let assignedTo = id_user;
+            const priority = form.find("#priority").val();
             console.log();
             if (!select.is("[disabled]"))
-             assignedTo = select.val();
-            const expected=form.find("input[type='date']").val();
+                assignedTo = select.val();
+            const expected = form.find("input[type='date']").val();
             $.ajax({
                 url: "ajax.php/activities/add/" + id_card,
                 type: "post",
@@ -940,7 +950,7 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
                     id_user: id_user,
                     assignedTo: assignedTo,
                     expected: expected,
-                    priority : priority
+                    priority: priority
                 },
                 success: function (data) {
 
@@ -987,28 +997,160 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
 
         }
     }
-const creator = <?php echo $creator; ?>;
-    function openActivity(id, element, assignedTo, idc,priority) {
-        if (id_user==idc || id_user==creator) {
+
+    const deleteComment = (id) => {
+        fetch("ajax.php/comments/delete/" + id)
+            .then(res => res.ok)
+    }
+    const creator = <?php echo $creator; ?>;
+    const addCommentContainer = (data) => {
+        const name = document.createElement("div");
+        const comment = document.createElement("div");
+        const cnt = document.createElement("div")
+        const trash = document.createElement("i");
+        const edit = document.createElement("i");
+        cnt.id = "comment-" + data['id'];
+        name.style.fontWeight = "bold";
+        trash.classList.add("icon-trash");
+        edit.classList.add("icon-edit");
+        trash.style.float = "right";
+        trash.style.margin = "0.5rem";
+        edit.style.margin = "0.5rem";
+        edit.style.float = "right"
+        comment.style.padding = "0.8rem";
+        comment.style.border = "solid"
+        name.textContent = data['username'];
+        comment.textContent = data['comment'];
+        trash.onclick = function () {
+            deleteComment(data['id']);
+            $(this).parent().fadeOut(function (e) {
+                $(this).remove();
+            })
+        };
+        edit.onclick = function (e) {
+            e.preventDefault();
+            const {form, textarea} = createFormComment();
+
+            form.children.item(3).onclick= function (){
+                form.replaceWith(cnt);
+            }
+            form.children.item(0).textContent=(comment.innerText)
+            form.onsubmit= function (e){
+                e.preventDefault();
+                const com = form.children.item(0).value;
+                data={
+                    id: data['id'],
+                    comment: com,
+                    id_user: id_user
+                }
+
+                fetch("ajax.php/comments/edit", {
+                    method: "post",
+                    headers: {
+                        "content-type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                })
+                    .then(res => res.ok)
+                    .then (data => {
+                        cnt.children.item(3).textContent= com;
+                        form.replaceWith(cnt)
+                    })
+                    .catch(err => console.log(err));
+            }
+            cnt.replaceWith(form);
+        }
+        cnt.append(name, edit, trash, comment)
+        return cnt;
+    }
+
+    function createFormComment() {
+        const form = document.createElement("form");
+        const textarea = document.createElement("textarea");
+        const submit = document.createElement("input")
+        const cancel = document.createElement("input")
+
+        textarea.classList.add("text-area-comment");
+        submit.type = "submit";
+        cancel.type = "button";
+        cancel.value = "Cancel";
+        form.appendChild(textarea);
+        form.appendChild(document.createElement("br"))
+        form.appendChild(submit);
+        form.appendChild(cancel);
+        cancel.onclick = function () {
+            $(this).parent().remove();
+        }
+        return {form, textarea};
+    }
+
+    const commentForm = (ida, comments) => {
+        const {form, textarea} = createFormComment();
+        form.onsubmit = (e) => {
+            data = {
+                id_user: id_user,
+                id_activity: ida,
+                comment: textarea.value
+            };
+
+            e.preventDefault();
+            fetch("ajax.php/comments/add", {
+                method: "POST",
+                headers: {
+                    "content-type": "application/json"
+                },
+                body: JSON.stringify(data)
+            })
+                .then(res => res.ok)
+                .then(data => {
+                    form.remove();
+                    refreshComments(ida, comments)
+                })
+                .catch(err => console.log(err));
+        }
+        return form;
+
+    }
+
+    const refreshComments = (id, comments) => {
+        comments.empty();
+        fetch("ajax.php/comments/getComments/" + id, {
+            method: 'get'
+        }).then(res => res.json())
+            .then(data => {
+
+                for (let i = 0; i < data.length; i++) {
+                    const div = addCommentContainer(data[i])
+                    comments.append(div)
+
+                }
+            });
+
+    }
+
+
+    function openActivity(id, element, assignedTo, idc, priority) {
+        if (id_user == idc || id_user == creator) {
             const popup = $("#popup-edit");
             popup.css("display", "block").css("top", "120px");
             //$("#cnt").val(content);
             const p = $(element).children("p").text();
             const form = popup.find("form");
             $("#assigned-id").children("option[value='" + assignedTo + "']")
-            const dt=$(element).find("div").text();
-            let date='';
-            if (dt.indexOf("To Day")!==-1)
+            const dt = $(element).find("div").text();
+            let date = '';
+            if (dt.indexOf("To Day") !== -1)
                 date = new Date(Date.now()).toISOString().split("T")[0];
-            else if (dt.indexOf("Tomorrow")!==-1) {
-                date = new Date(Date.now()+1).toISOString().split("T")[0];
-            }else
-                date=dt.match(/\d{4}-\d{2}-\d{2}/)[0];
+            else if (dt.indexOf("Tomorrow") !== -1) {
+                date = new Date(Date.now() + 1).toISOString().split("T")[0];
+            } else
+                date = dt.match(/\d{4}-\d{2}-\d{2}/)[0];
             form.find("input[type='date']").val(date);
-            const st=getStatus($(element))
+            const st = getStatus($(element))
             $("#sl-status").val(st);
             $("#priority-edit").val(priority)
             $("#cnt").text(p);
+
             $("#delete-activity").on("click", function (e) {
                 e.preventDefault();
                 fetch("ajax.php/activities/delete/" + id, {
@@ -1027,13 +1169,24 @@ const creator = <?php echo $creator; ?>;
                     console.log(err);
                 })
             })
+
+            const comments = $(".comments").empty();
+            refreshComments(id, comments);
+            $("#addComment").on("click", function (e) {
+                e.preventDefault();
+                //here
+
+                if (!comments.find("form").exists())
+                    comments.append(commentForm(id, comments))
+
+            })
             form.on("submit", function (e) {
                 e.preventDefault();
                 let content = $("#cnt").val();
                 let status = $("#sl-status").val();
                 const assignedto = $("#assigned-id").val();
                 const expected = $(this).find("input[type='date']").val();
-                const priority= form.find("#priority-edit").val();
+                const priority = form.find("#priority-edit").val();
                 console.log(priority);
                 $.ajax({
                         url: "ajax.php/activities/edit/" + id,
@@ -1064,17 +1217,17 @@ const creator = <?php echo $creator; ?>;
     const draggables = document.querySelectorAll('.drag')
     const containers = document.querySelectorAll('.cont')
 
-    const getStatus= (d) => {
-        const name=d.parent().attr("name");
+    const getStatus = (d) => {
+        const name = d.parent().attr("name");
         let status;
         if (name.match(/(todo)-\w*/))
-            status=0;
+            status = 0;
         else if (name.match(/(inprog)-\w*/))
-            status=1;
+            status = 1;
         else if (name.match(/(done)-\w*/))
-            status=2;
+            status = 2;
         else
-            status=3;
+            status = 3;
         return status;
     }
     draggables.forEach(draggable => {
@@ -1086,16 +1239,16 @@ const creator = <?php echo $creator; ?>;
             const d = $(draggable);
             const idc = d.parent().parent().attr("id");
             const st = d.attr('onclick');
-            const status=getStatus(d);
-            const cl={
+            const status = getStatus(d);
+            const cl = {
                 0: "todo",
                 1: "in-progress",
                 2: "done",
                 3: "overdue"
             }
-            const ida = st.substring(st.indexOf("(")+1, st.indexOf(','));
+            const ida = st.substring(st.indexOf("(") + 1, st.indexOf(','));
             $.ajax({
-                url : "ajax.php/activities/changeCard",
+                url: "ajax.php/activities/changeCard",
                 type: "post",
                 data: {
                     id_card: idc,
@@ -1130,11 +1283,11 @@ const creator = <?php echo $creator; ?>;
             const box = child.getBoundingClientRect()
             const offset = y - box.top - box.height / 2
             if (offset < 0 && offset > closest.offset) {
-                return { offset: offset, element: child }
+                return {offset: offset, element: child}
             } else {
                 return closest
             }
-        }, { offset: Number.NEGATIVE_INFINITY }).element
+        }, {offset: Number.NEGATIVE_INFINITY}).element
     }
 
     $(document).ready(e => {
@@ -1142,18 +1295,18 @@ const creator = <?php echo $creator; ?>;
             e.preventDefault();
             const popup = $("#popup-ticket");
             popup.css("display", "block").css("top", "150px");
-            const form=popup.find("form")
+            const form = popup.find("form")
             const div = $(this);
-            const content= div.find('header').text().trim();
-            const ticket_id= div.find("a").attr("href").match(/\d+/)[0];
+            const content = div.find('header').text().trim();
+            const ticket_id = div.find("a").attr("href").match(/\d+/)[0];
             form.on("submit", e => {
                 e.preventDefault();
-                const assignedto=$("#assigned-iddd").val();
-                const card=$("#sl-cards option:selected").val();
-                const expected=form.find("input[type='date']").val();
+                const assignedto = $("#assigned-iddd").val();
+                const card = $("#sl-cards option:selected").val();
+                const expected = form.find("input[type='date']").val();
 
                 console.log({
-                    card:card,
+                    card: card,
                     content: content,
                     assignedto: assignedto,
                     expected: expected,
@@ -1161,7 +1314,7 @@ const creator = <?php echo $creator; ?>;
                     ticket_id: ticket_id
                 })
                 $.ajax({
-                    url: "ajax.php/activities/add/"+ card,
+                    url: "ajax.php/activities/add/" + card,
                     type: "post",
                     data: {
                         content: content,
@@ -1171,7 +1324,7 @@ const creator = <?php echo $creator; ?>;
                         ticket_id: ticket_id
                     },
                     success: data => {
-                        popup.css("display","none");
+                        popup.css("display", "none");
                         location.reload();
                     },
                     error: err => console.log(err)

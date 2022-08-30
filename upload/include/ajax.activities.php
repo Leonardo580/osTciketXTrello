@@ -33,13 +33,21 @@ class ActivitiesAjaxAPI extends AjaxController{
         $link=mysqli_connect("localhost", "anas", "22173515", "osticket");
         $content = $_POST['content'];
         $status = $_POST['status'];
-        $query= $link->prepare("update activities set content=?, status=? , id_user=? , assignedTo=?, expected=?, priority=? where id=?");
-        $id_user=$_POST['id_user'];
-        $query->bind_param("siiissi", $content, $status, $id_user,$_POST['assignedTo'],
-            $_POST['expected'],$_POST['priority'],  $id );
+        if ($_POST['assignedTo']) {
+            $query = $link->prepare("update activities set content=?, status=?  , assignedTo=?, expected=?, priority=? where id=?");
+            $query->bind_param("siissi", $content, $status, $_POST['assignedTo'],
+                $_POST['expected'], $_POST['priority'], $id);
+        }
+    else
+        {
+            $query = $link->prepare("update activities set content=?, status=?  , expected=?, priority=? where id=?");
+            $query->bind_param("sissi", $content, $status,
+                $_POST['expected'], $_POST['priority'], $id);
+        }
         $query->execute();
 
         $query->close();
+        return $this->json_encode($_POST);
     }
     public function display($id): array{
         $link=mysqli_connect("localhost", "anas", "22173515", "osticket");

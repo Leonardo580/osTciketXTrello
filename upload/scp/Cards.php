@@ -581,15 +581,7 @@ where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =
                                                 <?php echo $members[$i]['username']; ?>
                                             </option>
                                         <?php }
-                                    else {
-                                        for ($i = 0; $i < count($members); $i++)
-                                            if ($members[$i]["staff_id"] == $thisstaff->getId()) { ?>
-                                                <option value="<?php echo $members[$i]['staff_id']; ?>">
-                                                    <?php echo $members[$i]['username']; ?>
-                                                </option>
-                                                <?php
-                                            }
-                                    } ?>
+                                     ?>
 
                                 </select>
                             </td>
@@ -1031,14 +1023,14 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
             e.preventDefault();
             const {form, textarea} = createFormComment();
 
-            form.children.item(3).onclick= function (){
+            form.children.item(3).onclick = function () {
                 form.replaceWith(cnt);
             }
-            form.children.item(0).textContent=(comment.innerText)
-            form.onsubmit= function (e){
+            form.children.item(0).textContent = (comment.innerText)
+            form.onsubmit = function (e) {
                 e.preventDefault();
                 const com = form.children.item(0).value;
-                data={
+                data = {
                     id: data['id'],
                     comment: com,
                     id_user: id_user
@@ -1052,15 +1044,18 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
                     body: JSON.stringify(data)
                 })
                     .then(res => res.ok)
-                    .then (data => {
-                        cnt.children.item(3).textContent= com;
+                    .then(data => {
+                        cnt.children.item(3).textContent = com;
                         form.replaceWith(cnt)
                     })
                     .catch(err => console.log(err));
             }
             cnt.replaceWith(form);
         }
-        cnt.append(name, edit, trash, comment)
+        if (data['id_user'] == id_user)
+            cnt.append(name, edit, trash, comment)
+        else
+            cnt.append(name, comment);
         return cnt;
     }
 
@@ -1130,11 +1125,12 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
 
 
     function openActivity(id, element, assignedTo, idc, priority) {
-        if (id_user == idc || id_user == creator) {
+        //if (id_user == idc || id_user == creator)
+        {
             const popup = $("#popup-edit");
             popup.css("display", "block").css("top", "120px");
             //$("#cnt").val(content);
-            const p = $(element).children("p").text();
+            const p = $(element).children("p").text().replace(/^( Assignment: )/, "");
             const form = popup.find("form");
             $("#assigned-id").children("option[value='" + assignedTo + "']")
             const dt = $(element).find("div").text();
@@ -1182,7 +1178,7 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
             })
             form.on("submit", function (e) {
                 e.preventDefault();
-                let content = $("#cnt").val();
+                let content = $("#cnt").val().replace(/^( Assignment: )/, "");
                 let status = $("#sl-status").val();
                 const assignedto = $("#assigned-id").val();
                 const expected = $(this).find("input[type='date']").val();
@@ -1194,13 +1190,13 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
                         data: {
                             content: content,
                             status: status,
-                            id_user: id_user,
+                            //id_user: id_user,
                             assignedTo: assignedto,
                             expected: expected,
                             priority: priority
                         },
                         success: function (data) {
-                            console.log("success");
+                            console.log(data);
                             popup.css("display", "none");
                             location.reload();
                         },

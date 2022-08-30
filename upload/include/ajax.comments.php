@@ -5,7 +5,7 @@ class CommentsAjaxAPI extends AjaxController
     public function getComments($id_activity)
     {
         $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
-        $query = $link->prepare("select id, username,  comment from comments 
+        $query = $link->prepare("select id, username,  comment, id_user from comments 
                             inner join ost_staff os on comments.id_user = os.staff_id where  id_activity=? order by dateCreated");
         $query->bind_param("i", $id_activity);
         $query->execute();

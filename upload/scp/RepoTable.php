@@ -145,19 +145,20 @@ inner join members m on m.id_repo=id and m.id_user=" . $thisstaff->getId() .
                     <?php
 
                     $redirect = "<a href='DetailedRepo.php?idr=" . $r['id'] . "'>" . $r['title'] . "</a>";
-
+                    $id=$r['id'];
                     ?>
-                    <td><a href="DetailedRepo.php?idr=<?= $r['id']?>"><?php echo $r['title'] ?></a></td>
-                    <td><a href="DetailedRepo.php?idr=<?= $r['id']?>"><?php echo $r['username']; ?></a></td>
-                    <td><a href="DetailedRepo.php?idr=<?= $r['id']?>"><?php echo $r['dateCreated']; ?></a></td>
-                    <td><?php
+
+                    <td onclick="relocate(<?= $id?>)" style="cursor: pointer"><?php echo $r['title'] ?></td>
+                    <td onclick="relocate(<?= $id?>)" style="cursor: pointer"><?php echo $r['username']; ?></td>
+                    <td onclick="relocate(<?= $id?>)" style="cursor: pointer"><?php echo $r['dateCreated']; ?></td>
+                    <td onclick="relocate(<?= $id?>)" style="cursor: pointer"><?php
                         $st = $r['description'];
                         if (strlen($st) > 50) {
                             $st = substr($st, 0, 100);
                             $st .= "...";
                         }
                         $id=$r['id'];
-                        echo "<a href='DetailedRepo.php?idr=$id'>".$st."</a>";
+                        echo $st;
                         ?></td>
                     <td><a href="Repositories.php?del=<?php echo $r['id']; ?>">
                             <button>Delete</button>
@@ -203,4 +204,9 @@ inner join members m on m.id_repo=id and m.id_user=" . $thisstaff->getId() .
     function editRepo(id) {
         window.location.href = "http://localhost/osTicket/upload/scp/" + 'editRepositories.php?edit=' + id;
     }
+
+    const relocate= (id)=>{
+        location.href="DetailedRepo.php?idr="+id;
+    }
+    $("td")
 </script>

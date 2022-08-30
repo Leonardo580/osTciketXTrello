@@ -68,6 +68,7 @@ $query->bind_param("i", $_GET['idr']);
 $query->execute();
 $res = $query->get_result();
 $res = $res->fetch_array(PDO::FETCH_LAZY);
+
 $isTheOwner = $thisstaff->getId() == $res['creator'];
 $query->close();
 ?>
@@ -119,9 +120,9 @@ $query->close();
                         <?php
 
                         $idr = $_GET['idr'];
-                        $sql = "select distinct u.staff_id as 'id', u.username as 'username' , u.created, u.updated from ost_staff u 
+                        $sql = "select  distinct u.staff_id as 'id', u.username as 'username' , repos.creator from ost_staff u
                                 inner join members on u.staff_id = members.id_user
-                                inner join repos on members.id_repo = $idr";
+                                inner join repos on members.id_repo = repos.id where repos.id=$idr;";
                         $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
                         $result = mysqli_query($link, $sql);
                         $members = array();
@@ -157,15 +158,17 @@ $query->close();
                                     </div>
                                 </td>
                                 <td class="candidate-list-favourite-time text-center">
-                                    <a class="candidate-list-favourite order-2 text-danger" href="#"><i
-                                                class="fas fa-heart"></i></a>
-                                    <span class="candidate-list-time order-1"><?php echo $m['status'] ?></span>
+                                    <a class="candidate-list-favourite order-2 text-danger" href="#"></a>
+                                    <span class="candidate-list-time order-1"><?php
+                                        if ( $id!=$thisstaff->getId()) echo "Creator";
+                                        else echo "Invited member"
+                                        ?></span>
                                 </td>
                                 <td>
                                     <ul class="list-unstyled mb-0 d-flex justify-content-end">
-                                        <li><a href="#" class="text-primary" data-toggle="tooltip" title=""
+                                        <!--<li><a href="#" class="text-primary" data-toggle="tooltip" title=""
                                                data-original-title="view"><i
-                                                        class="far fa-eye"></i></a></li>
+                                                        class="far fa-eye"></i></a></li>-->
                                         <li>
                                             <?php
                                             $id = $m['id'];
@@ -173,7 +176,7 @@ $query->close();
                                                 echo '
                                             <a href="deleteMember.php?id=' . $id . '&idr=' . $idr . '"
                                                class="text-danger" data-toggle="tooltip" title=""
-                                               data-original-title="Delete"><i
+                                               data-original-title="Kickout"><i
                                                         class="far fa-trash-alt"></i></a></li>';
                                             }
                                             ?>
@@ -350,13 +353,13 @@ while ($row = mysqli_fetch_array($result)) {
 <hr>
 <br>
 <div class="album py-5 bg-light">
-    <div class="container">
+    <div class="container" style="flex: auto">
         <div class="row">
             <?php foreach ($boards as $b) { ?>
 
-                <div class="two-column" style="display: flex;">
+                <div class="">
 
-                    <div class="card shadow-sm" id="<?php echo $b['id'] ?>">
+                    <div class="card shadow-sm" id="<?php echo $b['id'] ?> " style="margin: 1rem;width: 60rem;height: 150px">
                         <!--<svg class="bd-placeholder-img card-img-top" width="100%" height="225"
                              xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail"
                              preserveAspectRatio="xMidYMid slice" focusable="false"><title> Placeholder</title>
@@ -366,7 +369,7 @@ while ($row = mysqli_fetch_array($result)) {
                                   style="--darkreader-inline-fill:#dddad6;">Board
                             </text>
                         </svg>-->
-                        <img src="../assets/default/images/generic_image.jfif" alt="board image" class="img-board">
+<!--                        <img src="../assets/default/images/generic_image.jfif" alt="board image" class="img-board">-->
 
                         <div class="card-body">
                             <p class="card-text"><strong><?php echo $b['title']; ?></strong></p>
@@ -427,6 +430,7 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
             $("#popup").css("display", "block");
             let form = $("#popup").children(".body").children("#the-lookup-form")
                 .children("#new-org-form").children("form");
+            form.find("input[type='submit']").val("Add Board")
             form.on("submit", function () {
                 let title = $(this).children("table").children("tbody")
                     .children("tr").children("td")
@@ -463,6 +467,7 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
                 .children("#boardinput")
                 .children("#_159b9ba6d25cf8");
             t.attr("value", title);
+            form.find("input[type='submit']").val("Edit Board")
             id = $(this).parent().parent().parent().parent().attr("id");
             form.on("submit", function (e) {
                 e.preventDefault();

@@ -1,11 +1,11 @@
 <?php
 
-if (isset($_GET['del'])){
+if (isset($_GET['del'])) {
     $id = $_GET['del'];
     $sql = "delete from repos where id = $id";
     $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
     if (!$link)
-        die( "Error: Unable to connect to MySQL." . PHP_EOL);
+        die("Error: Unable to connect to MySQL." . PHP_EOL);
     mysqli_query($link, $sql);
     mysqli_close($link);
     //http_redirect("addRepositories.php");
@@ -18,7 +18,7 @@ $queue_columns = array(
     'Creator' => array(
         'width' => '16%',
         'heading' => __('Creator'),
-        'sort_col'  => 'ticket__number',
+        'sort_col' => 'ticket__number',
     ),
     'date' => array(
         'width' => '20%',
@@ -32,17 +32,17 @@ $queue_columns = array(
     ),
 
 );
-$refresh_url="";
-$results_type="";
-$showing="";
-$count=0;
+$refresh_url = "";
+$results_type = "";
+$showing = "";
+$count = 0;
 
 ?>
 <div id='basic_search'>
     <div class="pull-right" style="height:25px">
         <span class="valign-helper"></span>
         <?php
-        require STAFFINC_DIR.'templates/tasks-queue-sort.tmpl.php';
+        require STAFFINC_DIR . 'templates/tasks-queue-sort.tmpl.php';
         ?>
     </div>
     <form action="" method="get" onsubmit="javascript:
@@ -69,12 +69,12 @@ $count=0;
             <div class="pull-left flush-left">
                 <h2><a href="<?php echo $refresh_url; ?>"
                        title="<?php echo __('Refresh'); ?>"><i class="icon-refresh"></i> <?php echo
-                            $results_type.$showing; ?></a></h2>
+                            $results_type . $showing; ?></a></h2>
             </div>
             <div class="pull-right flush-right">
                 <?php
                 if ($count)
-                   // echo Task::getAgentActions($thisstaff, array('status' => $status));
+                // echo Task::getAgentActions($thisstaff, array('status' => $status));
                 ?>
             </div>
         </div>
@@ -82,10 +82,10 @@ $count=0;
     <div class="clear"></div>
     <form action="tasks.php" method="POST" name='tasks' id="tasks">
         <?php csrf_token(); ?>
-        <input type="hidden" name="a" value="mass_process" >
-        <input type="hidden" name="do" id="action" value="" >
+        <input type="hidden" name="a" value="mass_process">
+        <input type="hidden" name="do" id="action" value="">
         <input type="hidden" name="status" value="<?php echo
-        Format::htmlchars($_REQUEST['status'], true); ?>" >
+        Format::htmlchars($_REQUEST['status'], true); ?>">
         <table class="list" border="0" cellspacing="1" cellpadding="2" width="940">
             <thead>
             <tr>
@@ -93,17 +93,17 @@ $count=0;
 
                 <?php
                 // Query string
-                $qstr="";
+                $qstr = "";
                 // Show headers
                 foreach ($queue_columns as $k => $column) {
-                    echo sprintf( '<th width="%s"><a href="?sort=%s&dir=%s&%s"
+                    echo sprintf('<th width="%s"><a href="?sort=%s&dir=%s&%s"
                         class="%s">%s</a></th>',
                         $column['width'],
                         $column['sort'] ?: $k,
                         $column['sort_dir'] ? 0 : 1,
                         $qstr,
                         isset($column['sort_dir'])
-                            ? ($column['sort_dir'] ? 'asc': 'desc') : '',
+                            ? ($column['sort_dir'] ? 'asc' : 'desc') : '',
                         $column['heading']);
                 }
                 ?>
@@ -112,57 +112,60 @@ $count=0;
             </tr>
             </thead>
             <tbody>
-<!--            // display all repos from database-->
+            <!--            // display all repos from database-->
 
-<?php
-//$repos = Repositories::getAllRepositoreis();
-$link = mysqli_connect("localhost", "anas", "22173515", "osticket");
-if (!$link)
-    die( "Error: Unable to connect to MySQL." . PHP_EOL);
-$sql = "select id, title, description ,creator,username, dateCreated from repos
-inner join members m on m.id_repo=id and m.id_user=".$thisstaff->getId().
-" inner join ost_staff os on creator = os.staff_id";
-$result = mysqli_query($link, $sql);
-$repositories = array();
-while($row = mysqli_fetch_array($result)){
-    $repositories[] = $row;
-}
-if (isset($_GET['search'])){
-    $search = $_GET['search'];
-    $sql= "select * from repos where title like '%$search%'  or description like '%$search%'";
-    $result = mysqli_query($link, $sql);
-    $repositories = array();
-    while($row = mysqli_fetch_array($result)){
-        $repositories[] = $row;
-    }
-
-}
-mysqli_close($link);
-
-foreach ($repositories as $r){
-?>
-            <tr>
-                <?php
-
-                    $redirect="<a href='DetailedRepo.php?idr=".$r['id']."'>".$r['title']."</a>";
-
-                ?>
-                 <td><?php echo $redirect ?></td>
-                <td><?php echo $r['username']; ?></td>
-                <td><?php echo $r['dateCreated']; ?></td>
-                <td><?php
-                    $st=$r['description'];
-                if (strlen($st) > 50) {
-                    $st = substr($st, 0, 100);
-                    $st .= "...";
+            <?php
+            //$repos = Repositories::getAllRepositoreis();
+            $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
+            if (!$link)
+                die("Error: Unable to connect to MySQL." . PHP_EOL);
+            $sql = "select id, title, description ,creator,username, dateCreated from repos
+inner join members m on m.id_repo=id and m.id_user=" . $thisstaff->getId() .
+                " inner join ost_staff os on creator = os.staff_id";
+            $result = mysqli_query($link, $sql);
+            $repositories = array();
+            while ($row = mysqli_fetch_array($result)) {
+                $repositories[] = $row;
+            }
+            if (isset($_GET['search'])) {
+                $search = $_GET['search'];
+                $sql = "select * from repos where title like '%$search%'  or description like '%$search%'";
+                $result = mysqli_query($link, $sql);
+                $repositories = array();
+                while ($row = mysqli_fetch_array($result)) {
+                    $repositories[] = $row;
                 }
-                echo $st;
-                ?></td>
-                <td><a href="Repositories.php?del=<?php echo $r['id']; ?>"><button>Delete</button></a></td>
-                <td> <input type="button" onclick="editRepo(<?php echo $r['id'];?>)" value="Edit"> </td>
-            </tr>
-<?php } ?>
-                </tbody>
+
+            }
+            mysqli_close($link);
+
+            foreach ($repositories as $r) {
+                ?>
+                <tr>
+                    <?php
+
+                    $redirect = "<a href='DetailedRepo.php?idr=" . $r['id'] . "'>" . $r['title'] . "</a>";
+
+                    ?>
+                    <td><a href="DetailedRepo.php?idr=<?= $r['id']?>"><?php echo $r['title'] ?></a></td>
+                    <td><a href="DetailedRepo.php?idr=<?= $r['id']?>"><?php echo $r['username']; ?></a></td>
+                    <td><a href="DetailedRepo.php?idr=<?= $r['id']?>"><?php echo $r['dateCreated']; ?></a></td>
+                    <td><?php
+                        $st = $r['description'];
+                        if (strlen($st) > 50) {
+                            $st = substr($st, 0, 100);
+                            $st .= "...";
+                        }
+                        $id=$r['id'];
+                        echo "<a href='DetailedRepo.php?idr=$id'>".$st."</a>";
+                        ?></td>
+                    <td><a href="Repositories.php?del=<?php echo $r['id']; ?>">
+                            <button>Delete</button>
+                        </a></td>
+                    <td><input type="button" onclick="editRepo(<?php echo $r['id']; ?>)" value="Edit"></td>
+                </tr>
+            <?php } ?>
+            </tbody>
 
             </tfoot>
         </table>
@@ -198,6 +201,6 @@ foreach ($repositories as $r){
 </script>-->
 <script>
     function editRepo(id) {
-        window.location.href = "http://localhost/osTicket/upload/scp/"+'editRepositories.php?edit='+id;
+        window.location.href = "http://localhost/osTicket/upload/scp/" + 'editRepositories.php?edit=' + id;
     }
 </script>

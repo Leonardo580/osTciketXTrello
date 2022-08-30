@@ -6,7 +6,6 @@ $ost->addExtraHeader('<meta name="tip-namespace" content="tasks.queue" />',
     "$('#content').data('tipNamespace', 'tasks.queue');");
 
 require_once(STAFFINC_DIR . 'header.inc.php');
-
 $link=mysqli_connect("localhost", "anas", "22173515", "osticket");
 $idr=$_GET['idr'];
 $token= $_GET['token'];
@@ -18,11 +17,13 @@ $pm=mysqli_fetch_array($res);
 $timestamp=date($pm['tmstmp']);
 $current_time=date(time());
 $id_user = $pm['id_user'];
-
+$id = $_SESSION["_auth"]["staff"]["id"];
 if (!$res){
     echo "<h1>Unknown error</h1>";
-}elseif ($thissaff->getId()!= $id_user){
-    Http::redirect(ROOT_PATH.'scp/login.php');
+}elseif ($id!= $id_user){
+    //Http::redirect(ROOT_PATH.'scp/logout.php');
+    echo "<h2 style='color: red'>The invite is not for you, login to different account</h2>";
+
 }
 else {
 

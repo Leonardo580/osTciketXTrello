@@ -45,7 +45,7 @@ mysqli_close($link);
     <?php foreach ($tickets as $t) { ?>
 
         <div>
-            <article class="tt tick">
+            <article class="tt ">
                 <header>
                     <?= $t['subject'] ?>
                 </header>
@@ -440,7 +440,16 @@ where (m.id_repo in (select r.id from repos r inner join boards b on b.id_repo =
                                 <input type="date" min="<?= date("Y-m-d"); ?>">
                             </td>
                         </tr>
-
+                        <tr>
+                            <td class="required">Priority: </td>
+                            <td class="required">
+                                <select id="priority-ticket">
+                                    <option value="LOW">Low</option>
+                                    <option value="MEDIUM">Medium</option>
+                                    <option value="HIGH">High</option>
+                                </select>
+                            </td>
+                        </tr>
 
                         </tbody>
                     </table>
@@ -1286,7 +1295,7 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
         }, {offset: Number.NEGATIVE_INFINITY}).element
     }
 
-    $(document).ready(e => {
+    $(document).ready(() => {
         $(".tick").on("click", function (e) {
             e.preventDefault();
             const popup = $("#popup-ticket");
@@ -1295,20 +1304,12 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
             const div = $(this);
             const content = div.find('header').text().trim();
             const ticket_id = div.find("a").attr("href").match(/\d+/)[0];
+            const priority= $("#priority-ticket").val();
             form.on("submit", e => {
                 e.preventDefault();
                 const assignedto = $("#assigned-iddd").val();
                 const card = $("#sl-cards option:selected").val();
                 const expected = form.find("input[type='date']").val();
-
-                console.log({
-                    card: card,
-                    content: content,
-                    assignedto: assignedto,
-                    expected: expected,
-                    id_user: id_user,
-                    ticket_id: ticket_id
-                })
                 $.ajax({
                     url: "ajax.php/activities/add/" + card,
                     type: "post",
@@ -1317,10 +1318,12 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
                         assignedTo: assignedto,
                         expected: expected,
                         id_user: id_user,
-                        ticket_id: ticket_id
+                        ticket_id: ticket_id,
+                        priority: priority
                     },
                     success: data => {
                         popup.css("display", "none");
+                        console.log(data)
                         location.reload();
                     },
                     error: err => console.log(err)

@@ -544,6 +544,7 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
                     email: email,
                     idr: idrr,
 
+
                 },
                 success: data => {
                     console.log(data);

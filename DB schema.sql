@@ -44,7 +44,7 @@ create table activities(
     constraint pk_ac primary key (id),
     constraint fk_ac foreign key (id_card) references Cards(id) on delete cascade on update cascade ,
     constraint fk_au foreign key (id_user) references members(id_user) on delete cascade on update cascade,
-    constraint fk_tc foreign key (id_ticket) references ost_ticket__cdata(ticket_id)
+    constraint fk_tc foreign key (id_ticket) references ost_ticket__cdata(ticket_id) on delete cascade on update cascade
 );
 
 create table pending_members (
@@ -53,14 +53,14 @@ create table pending_members (
     id_repo int(10) unsigned,
     tmstmp integer unsigned not null,
     constraint pk_pm primary key (token),
-    constraint fk_pm foreign key (id_repo) references repos(id)
+    constraint fk_pm foreign key (id_repo) references repos(id) on delete cascade on update cascade
 );
 
 
 create table pending_tickets (
     ticket_id int(11) unsigned primary key,
     isActivity bool,
-    constraint fk_pt foreign key (ticket_id) references ost_ticket__cdata(ticket_id)
+    constraint fk_pt foreign key (ticket_id) references ost_ticket__cdata(ticket_id) on delete cascade on update cascade
 );
 
 create table comments (
@@ -73,7 +73,7 @@ create table comments (
                           constraint fk_cu foreign key (id_user) references ost_staff(staff_id) on delete cascade on update cascade,
                           constraint fk_ca foreign key (id_activity) references activities(id) on delete cascade on update cascade
 );
-alter table comments add dateCreated timestamp default current_timestamp;
+
 
 create trigger pending_ticket_insert after insert on ost_ticket__cdata
     for each row

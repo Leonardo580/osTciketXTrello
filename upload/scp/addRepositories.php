@@ -11,7 +11,8 @@ if (isset($_POST['title']) && isset($_POST['description'])) {
         $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
         if (!$link)
             die( "Error: Unable to connect to MySQL." . PHP_EOL);
-        mysqli_query($link, $sql);
+        //mysqli_query($link, $sql);
+        db_query($sql);
         $query = $link->prepare("insert into members (id_user, id_repo) values (?, last_insert_id());");
         $query->bind_param("i", $thisstaff->getId() );
         $query->execute();

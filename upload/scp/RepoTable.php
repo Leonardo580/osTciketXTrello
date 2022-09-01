@@ -3,11 +3,11 @@
 if (isset($_GET['del'])) {
     $id = $_GET['del'];
     $sql = "delete from repos where id = $id";
-    $link = mysqli_connect("localhost", "anas", "22173515", "osticket");
+    /*$link = mysqli_connect("localhost", "anas", "22173515", "osticket");
     if (!$link)
-        die("Error: Unable to connect to MySQL." . PHP_EOL);
-    mysqli_query($link, $sql);
-    mysqli_close($link);
+        die("Error: Unable to connect to MySQL." . PHP_EOL);*/
+    db_query($sql);
+    //mysqli_close($link);
     //http_redirect("addRepositories.php");
 }
 $queue_columns = array(

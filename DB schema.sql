@@ -92,3 +92,5 @@ begin
     update activities set status=IF(
                     status!=2 and date(expected)<date(sysdate())    , 3, status);
 end$$
+
+alter table boards add column created date default sysdate();

@@ -822,6 +822,7 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
                     $.ajax({
                         url: 'ajax.php/cards/add/' + "<?php echo $_GET['idb']; ?>",
                         type: 'POST',
+                        ContentType: 'application/x-www-form-urlencoded',
                         data: {
                             title: title,
                             description: description
@@ -845,6 +846,10 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
                                 '<button style="text-align: left; " onclick="addActivity(' + id + ')"><i class="icon-plus icon-2x" style="float: left">Add Activity</i></button>' +
                                 '</article>'
                             ).append($("#newCard"));
+                            console.log({
+                                title: title,
+                                description: description
+                            });
                             location.reload();
 
                         },

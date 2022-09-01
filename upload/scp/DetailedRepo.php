@@ -333,13 +333,14 @@ $query->close();
     </div>
 </div>
 <?php
+
 $link = mysqli_connect("localhost", "root", "", "osticket");
 if (mysqli_connect_errno()) {
     echo "Failed to connect to MySQL: " . mysqli_connect_error();
 }
 
 $sql = "select * from boards where id_repo=$idr;";
-$result = mysqli_query($link, $sql);
+$result = db_query($sql);
 $boards = array();
 while ($row = mysqli_fetch_array($result)) {
     $boards[] = $row;
@@ -359,7 +360,7 @@ while ($row = mysqli_fetch_array($result)) {
 
                 <div class="">
 
-                    <div class="card shadow-sm" id="<?php echo $b['id'] ?> " style="margin: 1rem;width: 60rem;height: 150px">
+                    <div class="card shadow-sm" id="<?php echo $b['id']; ?>" style="margin: 1rem;width: 60rem;height: 150px">
                         <!--<svg class="bd-placeholder-img card-img-top" width="100%" height="225"
                              xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail"
                              preserveAspectRatio="xMidYMid slice" focusable="false"><title> Placeholder</title>
@@ -386,8 +387,9 @@ while ($row = mysqli_fetch_array($result)) {
                                 </div>
                                 <small class="text-muted"><?php
                                     $since = new DateTime($b['created']);
+                                    ;
                                     echo $since->diff(new DateTime())->format('%d days ago ');
-                                    echo $b['dateCreated'] ?></small>
+                                     ?></small>
                             </div>
                         </div>
                     </div>
@@ -517,7 +519,9 @@ require_once(STAFFINC_DIR . 'footer.inc.php');
                 url: "ajax.php/boards/" + id + "/delete/",
                 type: "POST",
                 success: function (data) {
+                    console.log('#'+id)
                     $('#' + id).fadeOut("normal", function () {
+                        console.log(this)
                         $(this).remove();
                     })
 

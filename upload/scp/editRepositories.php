@@ -1,20 +1,20 @@
 <?php
 $sql="";
-
-$link = mysqli_connect("localhost", "anas", "22173515", "osticket");
+require('staff.inc.php');
+/*$link = mysqli_connect("localhost", "anas", "22173515", "osticket");
 if (!$link)
-die( "Error: Unable to connect to MySQL." . PHP_EOL);
+die( "Error: Unable to connect to MySQL." . PHP_EOL);*/
 $sql = "select * from repos where id = " . $_GET['edit'];
-$repo = mysqli_query($link, $sql);
+$repo = db_query($sql);
 $repo = mysqli_fetch_array($repo);
 if (isset($_POST['title']) && isset($_POST['description'])) {
     if (!empty($_POST['title']) && !empty($_POST['description'])) {
         $sql = "update repos set
     title = '" . $_POST["title"] . "',description = '" . $_POST["description"] . "' where id = " . $_GET['edit'];
 
-        mysqli_query($link, $sql);
+        db_query($sql);
     }
-    mysqli_close($link);
+    //mysqli_close($link);
     header("Location: Repositories.php");
 
 }
